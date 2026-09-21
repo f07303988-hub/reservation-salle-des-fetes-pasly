@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#244c8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Réservations">
+<title>Salle des fêtes · Réservations</title>
+<style>
+:root{
+  --bg:#f2f4f7; --card:#ffffff; --ink:#16202b; --muted:#5f6b78; --line:#d9dee5; --soft:#e8ecf1;
+  --pri:#244c8a; --onpri:#ffffff; --wait:#d99a00; --bad:#c8362b; --ok:#2b7a4b;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f151c; --card:#18212b; --ink:#e6ebf0; --muted:#9aa6b3; --line:#2b3746; --soft:#212c39;
+    --pri:#7ea6e0; --onpri:#0d1826; --wait:#e8b23a; --bad:#f0857c; --ok:#63b98a;}
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--sans);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+#app{display:flex;flex-direction:column;height:100%;max-width:920px;margin:0 auto;background:var(--bg)}
+header.top{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:1px solid var(--line);background:var(--card)}
+header.top h1{font:600 19px/1.2 var(--serif);margin:0;flex:1}
+header.top small{display:block;font:400 12px var(--sans);color:var(--muted)}
+main{flex:1;overflow:auto;padding:16px;-webkit-overflow-scrolling:touch}
+nav.tabs{display:flex;border-top:1px solid var(--line);background:var(--card);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{flex:1;padding:12px 4px;border:0;background:none;color:var(--muted);font-weight:600;border-top:3px solid transparent}
+nav.tabs button.on{color:var(--pri);border-top-color:var(--pri)}
+h2{font:600 22px/1.2 var(--serif);margin:0 0 12px}
+h3{font:600 17px/1.2 var(--serif);margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px;font-weight:600;min-height:44px}
+.btn.pri{background:var(--pri);color:var(--onpri);border-color:var(--pri)}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:14px}
+.btn.ghost{background:none;border-color:transparent;color:var(--pri)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1;min-width:140px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.grid2.keep{grid-template-columns:1fr}}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=password],input[type=datetime-local],input[type=search],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);min-height:44px}
+textarea{min-height:120px;resize:vertical}
+.chk{display:flex;align-items:center;gap:10px;padding:8px 0;min-height:44px}
+.chk input{width:22px;height:22px;flex:none;accent-color:var(--pri)}
+/* Calendrier */
+.monthbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.monthbar h2{flex:1;margin:0;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line);background:var(--card)}
+.cal .dow{padding:6px 2px;text-align:center;font-size:12px;font-weight:600;color:var(--muted);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.day{display:flex;flex-direction:column;gap:3px;min-height:64px;padding:4px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card);text-align:left}
+.day.empty{background:var(--soft);cursor:default}
+.day .n{font-size:14px;font-weight:600}
+.day.today .n{display:inline-block;background:var(--pri);color:var(--onpri);border-radius:10px;padding:0 6px;align-self:flex-start}
+.bar{display:block;height:13px;border-radius:2px;background:var(--soft);font-size:9px;line-height:13px;text-align:center;font-weight:700;color:transparent}
+.bar.busy{background:var(--pri);color:var(--onpri)}
+.bar.wait{background:repeating-linear-gradient(135deg,var(--wait) 0 4px,transparent 4px 8px);color:var(--ink);box-shadow:inset 0 0 0 1px var(--wait)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 0;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:22px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.legend i.busy{background:var(--pri)}
+.legend i.wait{background:repeating-linear-gradient(135deg,var(--wait) 0 4px,transparent 4px 8px);box-shadow:inset 0 0 0 1px var(--wait)}
+.legend i.free{background:var(--soft)}
+/* Liste */
+.item{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px}
+.item .r1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pill{font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid currentColor}
+.tline{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 2px;min-height:44px}
+.tline .rel{font-size:12px;font-weight:700;white-space:nowrap;color:var(--muted);padding-top:2px}
+.tline .rel.urgent{color:var(--bad)}
+.dsal{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:6px 0;min-height:44px}
+.dsal .bar{width:34px;height:24px;line-height:24px;font-size:11px;flex:none}
+.todo{margin:14px 0 2px;font:700 14px/1.3 var(--sans)}
+.todo:first-of-type{margin-top:4px}
+.ok-line{color:var(--ok);font-weight:600}
+.pill.conflict{color:var(--bad)} .pill.wait{color:var(--wait)} .pill.confirmee{color:var(--pri)} .pill.annulee{color:var(--muted)}
+.prog{height:5px;background:var(--soft);border-radius:3px;margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok)}
+.stats{display:flex;gap:16px;flex-wrap:wrap}
+.stats b{display:block;font:600 24px/1.1 var(--serif)}
+/* Feuille (jour) */
+.overlay{position:fixed;inset:0;background:rgba(10,15,22,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{width:100%;max-width:920px;max-height:80%;overflow:auto;background:var(--card);border-radius:14px 14px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.alert{border:1px solid var(--bad);border-left-width:5px;border-radius:8px;padding:10px 12px;margin-bottom:14px;color:var(--bad);background:var(--card)}
+.note{border-left:4px solid var(--wait);padding:8px 12px;background:var(--card);border-radius:0 8px 8px 0;margin-bottom:14px}
+.sticky{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+.sticky h1{flex:1;font:600 18px var(--serif);margin:0}
+.total{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.rec{font:700 22px/1.5 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;text-align:center;padding:14px;border:2px dashed var(--pri);border-radius:8px;margin:14px 0;word-break:break-all}
+.lock{max-width:440px;margin:0 auto;padding:calc(32px + env(safe-area-inset-top,0px)) 20px 32px}
+.lock h1{font:600 26px/1.2 var(--serif);margin:0 0 6px}
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:90%}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#print{display:none}
+.viewer{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:var(--bg)}
+.viewer iframe{flex:1;border:0;background:#fff;width:100%}
+@media print{.viewer{display:none!important}}
+@media print{
+  html,body{background:#fff;height:auto}
+  body>#app,#toast{display:none!important}
+  #print{display:block;color:#000;background:#fff;font:12pt/1.5 Georgia,"Times New Roman",serif}
+  #print h1{font-size:17pt;text-align:center;margin:0 0 4pt}
+  #print .sig{display:flex;gap:40px;margin-top:36pt}
+  #print .sig div{flex:1;min-height:90pt;border-top:1px solid #000;padding-top:4pt}
+  #print .body{white-space:pre-wrap}
+}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="print"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="pdfIn" accept="application/pdf,.pdf,text/html,.html,.htm" multiple hidden>
+<input type="file" id="restoreIn" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+/* ============ Utilitaires ============ */
+const $=s=>document.querySelector(s);
+const enc=new TextEncoder(), dec=new TextDecoder();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fmtDT=s=>{const d=new Date(s);return d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' '+pad(d.getHours())+'h'+pad(d.getMinutes());};
+const fmtLong=s=>{const d=new Date(s);return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' à '+pad(d.getHours())+'h'+pad(d.getMinutes());};
+const eur=n=>(Number(n)||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:2});
+const uid=()=>Math.random().toString(36).slice(2,10);
+const clone=o=>JSON.parse(JSON.stringify(o));
+function setPath(o,p,v){const k=p.split('.');let t=o;for(let i=0;i<k.length-1;i++)t=t[k[i]];t[k[k.length-1]]=v;}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2800);}
+function toB64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s);}
+function fromB64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;}
+function download(name,data,type){const b=new Blob([data],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),30000);}
+
+/* ============ Stockage local (IndexedDB) ============ */
+const IDB=new Promise((res,rej)=>{const r=indexedDB.open('sdf-reservations',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const tx=async(mode,fn)=>{const d=await IDB;return new Promise((res,rej)=>{const t=d.transaction('kv',mode);const q=fn(t.objectStore('kv'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('transaction annulée'));});};
+const kvGet=k=>tx('readonly',s=>s.get(k));
+const kvSet=(k,v)=>tx('readwrite',s=>s.put(v,k));
+const kvDel=k=>tx('readwrite',s=>s.delete(k));
+const kvKeys=()=>tx('readonly',s=>s.getAllKeys());
+const kvClear=()=>tx('readwrite',s=>s.clear());
+/* Tout remplacer en UNE transaction : soit tout est remplacé, soit rien ne change. */
+const kvReplaceAll=async entries=>{const d=await IDB;return new Promise((res,rej)=>{
+  const t=d.transaction('kv','readwrite');
+  t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('transaction annulée'));
+  try{const s=t.objectStore('kv');s.clear();for(const [k,v] of entries)s.put(v,k);}
+  catch(e){try{t.abort();}catch(x){}rej(e);}
+});};
+/* Lecture de tout le contenu dans une seule transaction : instantané cohérent. */
+const kvEntries=async()=>{const d=await IDB;return new Promise((res,rej)=>{
+  const t=d.transaction('kv','readonly'),s=t.objectStore('kv'),k=s.getAllKeys(),v=s.getAll();
+  t.oncomplete=()=>res(k.result.map((key,i)=>[key,v.result[i]]));t.onerror=()=>rej(t.error);
+});};
+
+/* ============ Chiffrement (AES-GCM, clé protégée par code + code de récupération) ============ */
+async function derive(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function seal(key,data){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,data);const o=new Uint8Array(12+ct.byteLength);o.set(iv);o.set(new Uint8Array(ct),12);return o.buffer;}
+async function unseal(key,buf){const u=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},key,u.slice(12));}
+const normRec=s=>s.replace(/[\s-]/g,'').toUpperCase();
+function genRecovery(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const r=crypto.getRandomValues(new Uint8Array(20));let s='';r.forEach((b,i)=>{s+=A[b%32];if(i%5===4&&i<19)s+='-';});return s;}
+const importKey=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+
+/* ============ Code d'accès ============
+   12 caractères minimum, sans règle de majuscules ni de symboles : une phrase de 3 ou 4 mots simples est plus solide
+   (et plus facile à retenir) qu'un mot court « compliqué ». On refuse seulement les codes triviaux.
+   Le code est normalisé (espaces de début et de fin retirés, accents composés) pour qu'un espace ajouté par le clavier
+   du téléphone ou un accent saisi autrement ne bloque pas l'accès. À l'ouverture, les deux formes sont essayées :
+   un ancien code (minimum 8 caractères, non normalisé) continue donc de fonctionner. */
+const PW_MIN=12;
+const normPw=s=>String(s).normalize('NFC').trim();
+const pwVariants=s=>[...new Set([String(s),normPw(s)])];
+const PW_WEAK=/^(motdepasse|password|passw0rd|azerty|azertyuiop|qwerty|qwertyuiop|admin|administrateur|mairie|commune|pasly|salledesfetes|bienvenue|soleil|iloveyou|letmein|welcome)\d*$/;
+const PW_SEQ=['0123456789'.repeat(3),'9876543210'.repeat(3),'abcdefghijklmnopqrstuvwxyz','zyxwvutsrqponmlkjihgfedcba','azertyuiopqsdfghjklmwxcvbn','qwertyuiopasdfghjklzxcvbnm'];
+function pwProblem(pw){
+  const p=normPw(pw);
+  if(p.length<PW_MIN)return`Le code doit contenir au moins ${PW_MIN} caractères (${p.length} actuellement). Une phrase de 3 ou 4 mots simples convient très bien.`;
+  if(new Set(p).size<6)return'Ce code est trop répétitif : utilisez plus de caractères différents.';
+  const n=p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+  if(PW_WEAK.test(n)||PW_SEQ.some(s=>s.includes(n)))return'Ce code est trop facile à deviner. Choisissez plutôt une phrase de 3 ou 4 mots simples.';
+  return'';
+}
+function pwHint(pw){
+  const p=normPw(pw);
+  if(!p)return`${PW_MIN} caractères minimum. Une phrase de 3 ou 4 mots simples convient très bien.`;
+  if(p.length<PW_MIN)return`${p.length}/${PW_MIN} caractères`;
+  return pwProblem(pw)||(p.length>=16?'✓ Code solide.':'✓ Code accepté.');
+}
+const PW_TIP='Astuce : une phrase de 3 ou 4 mots simples (par exemple « la salle est belle ») est plus solide qu’un mot compliqué, et facile à retenir. Pas besoin de majuscules ni de symboles.';
+async function buildMeta(raw,pw,rec,oldMeta){
+  const meta=oldMeta?{...oldMeta}:{};
+  if(pw!=null){const s=crypto.getRandomValues(new Uint8Array(16));meta.sP=toB64(s);meta.wP=toB64(await seal(await derive(normPw(pw),s),raw));}
+  if(rec!=null){const s=crypto.getRandomValues(new Uint8Array(16));meta.sR=toB64(s);meta.wR=toB64(await seal(await derive(normRec(rec),s),raw));}
+  return meta;
+}
+async function wrapMeta(raw,pw,rec,oldMeta){const meta=await buildMeta(raw,pw,rec,oldMeta);await kvSet('meta',meta);return meta;}
+/* Renouvellement complet des clés : nouvelle clé de chiffrement, nouveau code de récupération, code d'accès conservé ou nouveau.
+   Tout (base, documents, clés) est rechiffré puis remplacé en UNE transaction : soit tout change, soit rien.
+   Changer seulement l'enveloppe du code de récupération ne suffirait pas : quelqu'un qui aurait gardé l'ancien code et une ancienne
+   copie des clés pourrait toujours retrouver la clé de chiffrement. Ici la clé elle-même change. */
+async function rekey(oldKey,pw){
+  S.restoring=true;
+  try{
+    await drainWrites();
+    const rawNew=await crypto.subtle.exportKey('raw',await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']));
+    const newKey=await importKey(rawNew),entries=[];
+    for(const [k,v] of await kvEntries()){
+      if(k==='meta'||k==='draft')continue;
+      entries.push([k,await seal(newKey,await unseal(oldKey,v))]);          // échoue si un élément est altéré : rien n'est modifié
+    }
+    const rec=genRecovery(),meta=await buildMeta(rawNew,pw,rec);
+    await kvReplaceAll([['meta',meta],...entries]);
+    S.meta=meta;S.raw=rawNew;S.key=newKey;
+    return rec;
+  }finally{S.restoring=false;}
+}
+/* ============ Protection contre les essais répétés ============
+   3 essais libres, puis une pause de 5 s, puis 15 s, puis 30 s (30 s ensuite). Le compteur est commun au code d'accès et au code
+   de récupération (alterner les deux ne remet rien à zéro), il est conservé si l'on recharge la page, et la règle est appliquée
+   dans les fonctions de vérification elles-mêmes : le bouton grisé n'est qu'un affichage. Un bon code remet le compteur à zéro. */
+const GUARD_FREE=3,GUARD_WAITS=[5,15,30],GUARD_KEY='sdf-guard';
+let guardMem={n:0,until:0},guardBusy=false,guardTick=null;
+function guardRead(){
+  let raw;
+  try{raw=localStorage.getItem(GUARD_KEY);}catch(e){raw=undefined;}                    // stockage indisponible : la mémoire de la page fait foi
+  if(raw!==undefined){
+    let g=null;try{g=raw?JSON.parse(raw):null;}catch(e){}                              // valeur illisible : traitée comme vide
+    guardMem=g&&Number.isFinite(g.n)&&Number.isFinite(g.until)?{n:Math.max(0,Math.min(Math.floor(g.n),1000)),until:g.until}:{n:0,until:0};
+  }
+  const max=GUARD_WAITS[GUARD_WAITS.length-1]*1000;
+  if(guardMem.until-Date.now()>max+1000)guardMem.until=Date.now()+max;   // horloge reculée : jamais plus que la pause maximale
+  return guardMem;
+}
+function guardWrite(g){guardMem=g;try{if(g.n||g.until)localStorage.setItem(GUARD_KEY,JSON.stringify(g));else localStorage.removeItem(GUARD_KEY);}catch(e){}}
+const guardWait=()=>Math.max(0,Math.ceil((guardRead().until-Date.now())/1000));
+const guardLeft=()=>Math.max(0,GUARD_FREE-guardRead().n);
+function guardEnter(){if(guardBusy||guardWait()>0)return true;guardBusy=true;return false;}   // true = refusé (pause en cours ou essai déjà en cours)
+function guardLeave(){guardBusy=false;}
+function guardFail(){const g={...guardRead()};g.n=Math.min(g.n+1,1000);const w=g.n>=GUARD_FREE?GUARD_WAITS[Math.min(g.n-GUARD_FREE,GUARD_WAITS.length-1)]:0;g.until=w?Date.now()+w*1000:0;guardWrite(g);return w;}
+function guardOk(){guardWrite({n:0,until:0});}
+function wrongMsg(base){const w=guardWait();if(w>0)return`${base} Trop d’essais : patientez ${w} s.`;return guardLeft()===1?`${base} Encore un essai avant une courte pause.`:base;}
+function guardUI(){   // grise le bouton et affiche le compte à rebours sur les écrans de code
+  clearInterval(guardTick);guardTick=null;
+  const b=document.querySelector('.lock [data-guard]'),m=document.getElementById('guardMsg');
+  if(!b||!m)return;
+  if(!b.dataset.label)b.dataset.label=b.textContent;
+  let said=false;
+  const tick=()=>{
+    if(!b.isConnected){clearInterval(guardTick);guardTick=null;return;}
+    const w=guardWait();
+    if(w>0){b.disabled=true;b.textContent=`Patientez ${w} s`;if(!said){m.textContent=`Trop d’essais. Vous pourrez réessayer dans ${w} secondes.`;said=true;}}
+    else{b.disabled=false;b.textContent=b.dataset.label;m.textContent='';clearInterval(guardTick);guardTick=null;}
+  };
+  tick();if(guardWait()>0)guardTick=setInterval(tick,250);
+}
+async function checkPassword(pw){
+  if(guardEnter())return false;
+  try{
+    for(const v of pwVariants(pw)){try{await unseal(await derive(v,new Uint8Array(fromB64(S.meta.sP))),fromB64(S.meta.wP));guardOk();return true;}catch(e){}}
+    guardFail();return false;
+  }finally{guardLeave();}
+}
+async function setupCode(pw){
+  const raw=await crypto.subtle.exportKey('raw',await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']));
+  const rec=genRecovery();
+  S.meta=await wrapMeta(raw,pw,rec);S.raw=raw;S.key=await importKey(raw);S.db=defaultDb();savedJson=null;inflightJson=null;await flushSave();return rec;
+}
+async function loadWith(raw){
+  await lockDone;                                          // un verrouillage en cours doit d'abord finir d'écrire
+  S.raw=raw;S.key=await importKey(raw);askPersist();
+  const d=await kvGet('data');
+  if(d){S.db=JSON.parse(dec.decode(await unseal(S.key,d)));savedJson=JSON.stringify(S.db);}else{S.db=defaultDb();savedJson=null;}
+  inflightJson=null;
+  if(heldSnapshot){ // modifications que l'écriture n'avait pas pu enregistrer au dernier verrouillage
+    try{const t=dec.decode(await unseal(S.key,heldSnapshot));if(t!==savedJson){S.db=JSON.parse(t);setTimeout(()=>toast('Modifications non enregistrées récupérées.'),500);}}catch(e){console.error(e);}
+    heldSnapshot=null;
+  }
+  migrate();scheduleSave(300);   // les migrations éventuelles s'enregistrent d'elles-mêmes
+  await restoreDraft();
+}
+async function tryUnlock(pw){
+  if(guardEnter())return false;
+  try{
+    let right=false;
+    for(const v of pwVariants(pw)){
+      try{const raw=await unseal(await derive(v,new Uint8Array(fromB64(S.meta.sP))),fromB64(S.meta.wP));right=true;await loadWith(raw);guardOk();return true;}catch(e){}
+    }
+    if(!right)guardFail();
+    return false;
+  }finally{guardLeave();}
+}
+async function tryRecover(rec,newPw){
+  if(guardEnter())return{err:'wait'};
+  try{
+    let raw;
+    try{raw=await unseal(await derive(normRec(rec),new Uint8Array(fromB64(S.meta.sR))),fromB64(S.meta.wR));}
+    catch(e){guardFail();return{err:'code'};}
+    guardOk();
+    try{
+      await loadWith(raw);                                 // vérifie que tout se déchiffre avant de rien modifier
+      return{rec:await rekey(S.key,newPw)};                // nouvelle clé, nouveau code d'accès, NOUVEAU code de récupération
+    }catch(e){
+      console.error(e);S.key=null;S.raw=null;S.db=null;S.edit=null;
+      return{err:'rekey'};
+    }
+  }finally{guardLeave();}
+}
+/* ============ Persistance de la base : trois fonctions, un seul écrivain ============
+   markDirty()      après une modification en mémoire de S.db (saisie en cours) : programme un enregistrement différé.
+   scheduleSave(ms) programme (ou reprogramme) un enregistrement différé.
+   flushSave()      enregistre maintenant et attend la fin : true si la base est à jour sur l'appareil, false en cas d'échec.
+   Le changement est détecté sur le CONTENU (comparaison avec la dernière version écrite, plus de drapeau à tenir à jour) :
+   oublier d'appeler markDirty() ne peut pas faire perdre une donnée, et un enregistrement sans changement n'écrit rien.
+   Seul ce bloc écrit la clé 'data' au fil de l'eau : une seule écriture à la fois, dans l'ordre, avec regroupement des demandes rapprochées.
+   (La restauration d'une sauvegarde est la seule exception : elle remplace tout en une transaction, après avoir vidé la file.) */
+let savedJson=null,inflightJson=null,pendingSnap=null,writeChain=Promise.resolve(true),lastWriteOk=true,saveTimer=null;
+function setSaveState(ok){
+  const changed=ok!==lastWriteOk;lastWriteOk=ok;
+  if(!ok)toast('⚠ Enregistrement impossible. Exportez une sauvegarde.');
+  if(changed&&S.key&&!S.lock&&!S.edit)render();
+}
+function cancelScheduledSave(){clearTimeout(saveTimer);}
+function scheduleSave(ms=600){cancelScheduledSave();saveTimer=setTimeout(()=>{if(S.key&&S.db)flushSave();},ms);}
+function markDirty(){scheduleSave();}
+function hasUnsaved(){return!!(S.db&&JSON.stringify(S.db)!==savedJson);}
+function flushSave(){
+  cancelScheduledSave();
+  if(!S.key||!S.db||S.restoring)return writeChain;
+  const json=JSON.stringify(S.db);                                  // instantané pris tout de suite
+  if(json===savedJson||json===inflightJson)return writeChain;       // rien de nouveau à écrire
+  inflightJson=json;pendingSnap={key:S.key,json};
+  writeChain=writeChain.then(async()=>{
+    const snap=pendingSnap;if(!snap)return lastWriteOk;
+    pendingSnap=null;
+    try{await kvSet('data',await seal(snap.key,enc.encode(snap.json)));savedJson=snap.json;if(inflightJson===snap.json)inflightJson=null;setSaveState(true);}
+    catch(e){console.error(e);inflightJson=null;setSaveState(false);}
+    return lastWriteOk;
+  });
+  return writeChain;
+}
+async function drainWrites(){cancelScheduledSave();await writeChain;}
+function askPersist(){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}}
+const openWins=[];
+let lockDone=Promise.resolve(),heldSnapshot=null;
+/* Verrouillage en deux temps :
+   1. l'écran se verrouille TOUT DE SUITE (plus rien d'affiché, plus aucune interaction possible) ;
+   2. puis on attend que la base soit réellement écrite, on met la fiche en cours de côté (brouillon chiffré),
+      et seulement ensuite on efface la clé et les données de la mémoire.
+   Si l'écriture est impossible (stockage plein…), un instantané CHIFFRÉ est gardé en mémoire jusqu'au prochain déverrouillage : rien n'est perdu en silence. */
+function lockNow(){
+  if(!S.key||S.lock)return lockDone;
+  const key=S.key,edit=S.edit,base=S.editBase,newFiles=S.newFiles,delFiles=S.delFiles,tab=S.tab;
+  S.lock='unlock';S.edit=null;S.sheet=null;awayAt=null;
+  document.querySelectorAll('body>.viewer,body>.overlay').forEach(v=>v.remove());   // lecteur de document, saisie du code de sauvegarde
+  openWins.splice(0).forEach(w=>{try{w.close();}catch(e){}});                        // documents ouverts dans un autre onglet
+  $('#print').innerHTML='';
+  render();
+  lockDone=(async()=>{
+    let ok=true;
+    try{ok=await flushSave();}catch(e){ok=false;console.error(e);}
+    if(edit){ // la fiche en cours de saisie est conservée, chiffrée, et rouverte au déverrouillage
+      try{await kvSet('draft',await seal(key,enc.encode(JSON.stringify({edit,base,newFiles,delFiles,tab}))));}catch(e){console.error(e);}
+    }
+    if(!ok&&S.db){try{heldSnapshot=await seal(key,enc.encode(JSON.stringify(S.db)));}catch(e){console.error(e);}}
+    if(S.key===key){S.key=null;S.raw=null;S.db=null;}                                 // seulement maintenant : effacement de la mémoire
+  })();
+  return lockDone;
+}
+/* Bouton « Verrouiller » : on attend l'enregistrement AVANT de verrouiller, et on prévient s'il a échoué. */
+async function lockManual(){
+  if(!S.key||S.lock)return;
+  const ok=await flushSave();
+  if(!ok&&!confirm('Les dernières modifications n’ont pas pu être enregistrées sur cet appareil.\n\nVerrouiller quand même ? Elles seront gardées en mémoire (chiffrées) jusqu’au prochain déverrouillage, mais perdues si vous fermez la page.\n\nAnnulez pour exporter d’abord une sauvegarde depuis les Réglages.'))return;
+  await lockNow();
+}
+async function restoreDraft(){
+  try{
+    await writeChain;const raw=await kvGet('draft');if(!raw)return;
+    await kvDel('draft');
+    const o=JSON.parse(dec.decode(await unseal(S.key,raw)));
+    if(o&&o.edit&&typeof o.edit.id==='string'){S.edit=o.edit;S.editBase=o.base||'';S.newFiles=o.newFiles||[];S.delFiles=o.delFiles||[];if(o.tab)S.tab=o.tab;setTimeout(()=>toast('Fiche en cours retrouvée.'),400);}
+  }catch(e){console.error(e);}
+}
+
+/* ============ Données ============ */
+const DEFAULT_CONTRAT=`Entre la commune de {{commune}}, représentée par {{signataire}}, ci-après « la commune »,
+et {{nom}}, demeurant {{adresse}}, téléphone {{tel}}, e-mail {{email}}, ci-après « le locataire ».
+
+Article 1 – Objet
+La commune met à disposition du locataire : {{salles}}, pour l'événement suivant : {{type}}.
+
+Article 2 – Durée
+La location court du {{debut}} au {{fin}}. Le locataire libère les lieux à l'heure de fin indiquée, salle rangée et nettoyée.
+
+Article 3 – Tarif
+Location : {{loyer}}. Options ({{options}}) : {{optionsPrix}}. Total à payer : {{total}}, selon les modalités indiquées par la mairie.
+
+Article 4 – Caution
+Une caution de {{caution}} est versée avant la remise des clés. Elle est restituée après l'état des lieux de sortie, déduction faite des éventuels dommages, manquements de rangement ou de nettoyage.
+
+Article 5 – Assurance
+Le locataire fournit, avant la remise des clés, une attestation d'assurance responsabilité civile couvrant la location.
+
+Article 6 – États des lieux
+Un état des lieux d'entrée et un état des lieux de sortie sont établis contradictoirement. Le locataire signale toute anomalie dès l'entrée dans les lieux.
+
+Article 7 – Usage des locaux
+Le locataire respecte la capacité d'accueil, les consignes de sécurité et le règlement intérieur de la salle, veille à la tranquillité du voisinage et s'interdit de fumer ou de vapoter dans les locaux. Toute sous-location est interdite.
+
+Article 8 – Responsabilité
+Le locataire répond des dommages causés aux locaux, au mobilier et au matériel pendant la durée de la location. La commune décline toute responsabilité en cas de vol ou de dégradation des biens apportés par le locataire.
+
+Article 9 – Annulation
+Toute annulation est signalée à la mairie dans les meilleurs délais. Les conditions de remboursement sont celles fixées par la commune.
+
+Article 10 – Données personnelles
+Les informations recueillies sont utilisées uniquement pour la gestion de la location. Elles sont accessibles au seul personnel habilité de la mairie et conservées jusqu'à la restitution de la caution, puis supprimées ou anonymisées, hors pièces comptables. Le locataire peut exercer ses droits d'accès, de rectification et d'effacement auprès de la mairie{{contact}}.`;
+
+const defaultDb=()=>({v:1,settings:{
+  commune:'Pasly',signataire:'',mairieContact:'',
+  edlUrl:'https://f07303988-hub.github.io/etat-des-lieux-numerique/',agentContact:'',
+  salles:[
+    {id:'grande',nom:'Grande salle',court:'G',jHab:0,jExt:0,wHab:0,wExt:0,caution:0},
+    {id:'petite',nom:'Petite salle',court:'P',jHab:0,jExt:0,wHab:0,wExt:0,caution:0}],
+  ensemble:{jHab:0,jExt:0,wHab:0,wExt:0,caution:0},
+  options:[{id:'chauffage',nom:'Chauffage',prix:0},{id:'vaisselle',nom:'Vaisselle',prix:0},{id:'menage',nom:'Ménage',prix:0}],
+  contrat:DEFAULT_CONTRAT,retention:12,lockIdleMin:10,lockAwayMin:2,lastBackup:'',pwPolicy:2},
+  counters:{},
+  resas:[]});
+function migrate(){
+  const legacyPw=!('pwPolicy' in (S.db.settings||{}));   // base créée avant la règle des 12 caractères
+  const d=defaultDb();S.db.settings=Object.assign(d.settings,S.db.settings);
+  if(legacyPw)S.db.settings.pwPolicy=1;
+  S.db.resas.forEach(r=>{r.etapes=Object.assign({contrat:false,assurance:false,cautionRecue:false,edlEntree:false,edlSortie:false,cautionRendue:false},r.etapes);r.pdfs=r.pdfs||[];r.options=r.options||[];});
+  S.db.counters=bumpCounters(S.db.counters||{},S.db.resas);
+}
+const ETAPES=[['contrat','Contrat signé'],['assurance','Attestation d’assurance reçue'],['cautionRecue','Caution reçue'],['edlEntree','État des lieux d’entrée'],['edlSortie','État des lieux de sortie'],['cautionRendue','Caution rendue']];
+const STATUTS={demande:'En attente',confirmee:'Réservée',annulee:'Annulée'};
+const TYPES=['Mariage','Anniversaire','Repas de famille','Association','Réunion','Autre'];
+const salleOf=id=>S.db.settings.salles.find(s=>s.id===id);
+const salleNames=r=>r.salles.map(id=>salleOf(id)?.nom||id).join(' + ');
+
+function newResa(day){
+  const d=day||ymd(new Date());
+  return{id:uid(),num:'',salles:['grande'],debut:d+'T10:00',fin:d+'T22:00',type:'Repas de famille',nb:null,
+    demandeur:{nom:'',adresse:'',tel:'',email:''},hab:'hab',options:[],loyerManuel:null,cautionManuelle:null,
+    statut:'demande',etapes:{contrat:false,assurance:false,cautionRecue:false,edlEntree:false,edlSortie:false,cautionRendue:false},notes:'',pdfs:[],created:new Date().toISOString()};
+}
+/* Numérotation : un compteur par année, stocké dans la base et indépendant des fiches existantes.
+   Un numéro attribué n'est jamais réutilisé, même si la fiche est supprimée ou anonymisée (il peut y avoir des trous, jamais de doublon). */
+function nextNum(year){
+  S.db.counters=S.db.counters||{};
+  let max=S.db.counters[year]||0;
+  S.db.resas.forEach(r=>{const m=r.num.match(new RegExp('^SDF-'+year+'-(\\d+)$'));if(m)max=Math.max(max,+m[1]);}); // garde-fou : jamais en dessous d'un numéro existant
+  S.db.counters[year]=max+1;
+  return `SDF-${year}-${String(max+1).padStart(3,'0')}`;
+}
+const bumpCounters=(counters,resas)=>{resas.forEach(r=>{const m=(r.num||'').match(/^SDF-(\d{4})-(\d+)$/);if(m)counters[m[1]]=Math.max(counters[m[1]]||0,+m[2]);});return counters;};
+function nbJours(r){
+  const a=new Date(r.debut),b=new Date(r.fin);
+  const d0=new Date(a.getFullYear(),a.getMonth(),a.getDate()),d1=new Date(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.max(1,Math.round((d1-d0)/864e5)+1);
+}
+const isEnsemble=r=>{const s=S.db.settings;return s.salles.length>1&&r.salles.length===s.salles.length;};
+const ensembleSet=e=>!!(e.jHab||e.jExt||e.wHab||e.wExt||e.caution);
+function money(r){
+  const s=S.db.settings,n=nbJours(r);let auto=0,cAuto=0,label;
+  const price=(x)=>{const j=r.hab==='hab'?x.jHab:x.jExt,w=r.hab==='hab'?x.wHab:x.wExt;return n===1?j:w+(n-2)*j;};
+  if(isEnsemble(r)&&ensembleSet(s.ensemble)){
+    auto=price(s.ensemble);cAuto=s.ensemble.caution||0;label='tarif « '+salleNames(r)+' » (les deux ensemble)';
+  }else{
+    r.salles.forEach(id=>{const x=salleOf(id);if(!x)return;auto+=price(x);cAuto+=x.caution||0;});
+    label=r.salles.length>1?'somme des tarifs de chaque salle (tarif ensemble non renseigné)':'tarif « '+salleNames(r)+' »';
+  }
+  const opt=r.options.reduce((t,id)=>t+(s.options.find(o=>o.id===id)?.prix||0),0);
+  const base=r.loyerManuel??auto;
+  return{auto,base,opt,total:base+opt,cAuto,caution:r.cautionManuelle??cAuto,label};
+}
+function conflicts(r){
+  const a=+new Date(r.debut),b=+new Date(r.fin);
+  return S.db.resas.filter(o=>o.id!==r.id&&o.statut!=='annulee'&&o.salles.some(x=>r.salles.includes(x))&&+new Date(o.debut)<b&&+new Date(o.fin)>a);
+}
+/* Règles : une réservation « Réservée » ne peut chevaucher aucune autre réservation « Réservée » (même salle).
+   Les demandes « En attente » peuvent se chevaucher entre elles, et être enregistrées sur un créneau déjà pris (liste d'attente),
+   mais ne peuvent être confirmées que si le créneau est libre. */
+const overlapping=(r,statut)=>conflicts(r).filter(o=>o.statut===statut);
+const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+const descr=x=>`${x.num} (${x.demandeur.nom}, ${salleNames(x)}, ${fmtDT(x.debut)} → ${fmtDT(x.fin)})`;
+function slotBanners(r){
+  if(r.statut==='annulee')return'';
+  const taken=overlapping(r,'confirmee'),rivals=overlapping(r,'demande');let out='';
+  if(taken.length&&r.statut==='confirmee')
+    out+=`<div class="alert" role="alert"><b>Conflit avec une réservation confirmée.</b> ${taken.map(x=>esc(descr(x))).join(' ; ')}<br>Impossible d’enregistrer cette réservation comme « Réservée ». Changez les dates ou la salle, ou laissez-la « En attente ».</div>`;
+  else if(taken.length)
+    out+=`<div class="note"><b>Créneau déjà réservé :</b> ${taken.map(x=>esc(descr(x))).join(' ; ')}<br>Cette demande peut être enregistrée en attente, mais ne pourra être confirmée que si la réservation existante est annulée.</div>`;
+  if(rivals.length)
+    out+=`<div class="note"><b>${rivals.length} autre(s) demande(s) en attente sur ce créneau :</b> ${rivals.map(x=>esc(descr(x))).join(' ; ')}<br>Une seule pourra être confirmée.</div>`;
+  return out;
+}
+function clashFlag(r){
+  if(r.statut==='annulee')return'';
+  const taken=overlapping(r,'confirmee').length;
+  if(!taken)return'';
+  return`<span class="pill conflict">${r.statut==='confirmee'?'Conflit':'Créneau pris'}</span>`;
+}
+const progress=r=>Object.values(r.etapes).filter(Boolean).length/ETAPES.length;
+
+/* ============ État de l'application ============ */
+const S={recWhy:null,autofocus:null,editBase:'',calFocus:null,key:null,raw:null,db:null,meta:null,dirty:false,tab:'dash',lock:'unlock',rec:null,sheet:null,edit:null,newFiles:[],delFiles:[],pdfTarget:'auto',
+  month:(()=>{const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d;})(),
+  filt:{year:String(new Date().getFullYear()),statut:'',q:''}};
+
+/* ============ Vues ============ */
+function lockView(){
+  const warn=`<p class="note small">Sans ce code ni le code de récupération, les données ne peuvent pas être retrouvées. Le code n’est enregistré nulle part.</p>`;
+  if(S.lock==='setup')return`<div class="lock"><h1>Réservations de la salle des fêtes</h1><p class="muted">Choisissez un code d’accès. Il chiffre toutes les fiches sur cet appareil.</p>
+    <label class="f" for="pw1">Code d’accès (${PW_MIN} caractères minimum)</label><input type="password" id="pw1" autocomplete="new-password" data-pwfield>
+    <p class="small muted" id="pwHint" aria-live="polite" style="margin:4px 0 0">${esc(pwHint(''))}</p>
+    <label class="f" for="pw2">Confirmer le code</label><input type="password" id="pw2" autocomplete="new-password" data-pwfield>
+    <label class="chk"><input type="checkbox" id="showpw"><span>Afficher le code</span></label>
+    <p class="small muted">${PW_TIP}</p>
+    ${warn}<button class="btn pri" style="width:100%" data-act="setup">Créer le code d’accès</button></div>`;
+  if(S.lock==='showrec'){const renew=S.recWhy==='recovered'||S.recWhy==='rotated';return`<div class="lock"><h1>${renew?'Nouveau code de récupération':'Code de récupération'}</h1><p>${renew?'Votre ancien code de récupération ne fonctionne plus. Notez ce nouveau code sur papier et rangez-le en lieu sûr. Il ne sera plus affiché.':'Notez ce code sur papier et rangez-le en lieu sûr. Il permet de rouvrir les données si le code d’accès est oublié. Il ne sera plus affiché.'}</p>
+    <div class="rec">${esc(S.rec)}</div>
+    <button class="btn" style="width:100%;margin-bottom:12px" data-act="printRec">Imprimer le code</button>
+    <label class="chk"><input type="checkbox" id="recok"><span>J’ai noté et rangé le code de récupération</span></label>
+    <button class="btn pri" style="width:100%;margin-top:8px" data-act="recDone">Ouvrir l’application</button></div>`;}
+  if(S.lock==='recover')return`<div class="lock"><h1>Code oublié</h1><p class="muted">Saisissez le code de récupération et choisissez un nouveau code d’accès. Un nouveau code de récupération sera généré : l’ancien ne fonctionnera plus.</p>
+    <label class="f" for="rec">Code de récupération</label><input type="text" id="rec" autocomplete="off" autocapitalize="characters" class="mono">
+    <label class="f" for="pwn">Nouveau code d’accès (${PW_MIN} caractères minimum)</label><input type="password" id="pwn" autocomplete="new-password" data-pwfield>
+    <p class="small muted" id="pwHint" aria-live="polite" style="margin:4px 0 0">${esc(pwHint(''))}</p>
+    <label class="chk"><input type="checkbox" id="showpw"><span>Afficher le code</span></label>
+    <p class="small" id="guardMsg" role="status" aria-live="polite" style="color:var(--bad);margin:10px 0 0"></p>
+    <button class="btn pri" style="width:100%;margin-top:14px" data-act="recover" data-guard>Rouvrir avec le code de récupération</button>
+    <button class="btn ghost" style="width:100%" data-act="goUnlock">Retour</button></div>`;
+  return`<div class="lock"><h1>Réservations de la salle des fêtes</h1><p class="muted">Saisissez le code d’accès.</p>
+    <label class="f" for="pw">Code d’accès</label><input type="password" id="pw" autocomplete="current-password">
+    <p class="small" id="guardMsg" role="status" aria-live="polite" style="color:var(--bad);margin:10px 0 0"></p>
+    <button class="btn pri" style="width:100%;margin-top:14px" data-act="unlock" data-guard>Ouvrir</button>
+    <button class="btn ghost" style="width:100%" data-act="goRecover">Code oublié</button></div>`;
+}
+
+function dayState(dayStart,salleId){
+  const a=+dayStart,b=a+864e5;let st='';
+  S.db.resas.forEach(r=>{if(r.statut==='annulee'||!r.salles.includes(salleId))return;
+    if(+new Date(r.debut)<b&&+new Date(r.fin)>a){if(r.statut==='confirmee')st='busy';else if(st!=='busy')st='wait';}});
+  return st;
+}
+/* ============ Tableau de bord ============ */
+const DASH_DAYS=45,DASH_PAST_DAYS=180,DASH_EDL_DAYS=7,BACKUP_DAYS=30;
+const nowD=()=>new Date(Date.now());
+const T=s=>+new Date(s);
+const heureDe=s=>{const d=new Date(s);return pad(d.getHours())+'h'+pad(d.getMinutes());};
+const jourDe=x=>{const d=new Date(x);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();};
+const plur=(n,s,p)=>n>1?p:s;
+function relDate(r,now){
+  const a=T(r.debut),b=T(r.fin),n=+now;
+  if(a<=n&&n<b)return{t:'en cours',urgent:true};
+  if(b<=n){const j=Math.round((jourDe(n)-jourDe(b))/864e5);return{t:j<1?'terminée aujourd’hui':j===1?'terminée hier':`terminée depuis ${j} j`,urgent:true};}
+  const j=Math.round((jourDe(a)-jourDe(n))/864e5);
+  return{t:j===0?'aujourd’hui':j===1?'demain':`dans ${j} j`,urgent:j<=3};
+}
+const periode=r=>{const same=jourDe(r.debut)===jourDe(r.fin);return same?`${fmtDT(r.debut)} → ${heureDe(r.fin)}`:`${fmtDT(r.debut)} → ${fmtDT(r.fin)}`;};
+/* Ce qui reste à faire, calculé à partir du suivi de chaque dossier confirmé. */
+function taches(now=nowD()){
+  const n=+now,vivantes=S.db.resas.filter(r=>r.statut==='confirmee'&&!r.anonyme);
+  const aVenir=r=>T(r.fin)>n&&T(r.debut)<=n+DASH_DAYS*864e5;
+  const termine=r=>T(r.fin)<=n&&n-T(r.fin)<=DASH_PAST_DAYS*864e5;
+  const cats=[
+    {k:'conflit',label:c=>`${c} ${plur(c,'conflit','conflits')} de dates entre réservations confirmées`,items:vivantes.filter(r=>T(r.fin)>n&&overlapping(r,'confirmee').length)},
+    {k:'edlSortie',label:c=>`${c} ${plur(c,'état','états')} des lieux de sortie à faire`,items:vivantes.filter(r=>termine(r)&&!r.etapes.edlSortie)},
+    {k:'cautionRendre',label:c=>`${c} ${plur(c,'caution','cautions')} à rendre`,items:vivantes.filter(r=>termine(r)&&r.etapes.edlSortie&&r.etapes.cautionRecue&&!r.etapes.cautionRendue)},
+    {k:'edlEntree',label:c=>`${c} ${plur(c,'état','états')} des lieux d’entrée à faire (dans les ${DASH_EDL_DAYS} jours)`,items:vivantes.filter(r=>T(r.fin)>n&&T(r.debut)<=n+DASH_EDL_DAYS*864e5&&!r.etapes.edlEntree)},
+    {k:'assurance',label:c=>`${c} ${plur(c,'attestation','attestations')} d’assurance ${plur(c,'manquante','manquantes')}`,items:vivantes.filter(r=>aVenir(r)&&!r.etapes.assurance)},
+    {k:'contrat',label:c=>`${c} ${plur(c,'contrat','contrats')} non ${plur(c,'signé','signés')}`,items:vivantes.filter(r=>aVenir(r)&&!r.etapes.contrat)},
+    {k:'caution',label:c=>`${c} ${plur(c,'caution','cautions')} non ${plur(c,'reçue','reçues')}`,items:vivantes.filter(r=>aVenir(r)&&!r.etapes.cautionRecue)},
+  ];
+  cats.forEach(c=>c.items.sort((a,b)=>T(a.debut)-T(b.debut)));
+  return cats.filter(c=>c.items.length);
+}
+function sauvegardeAFaire(now=nowD()){
+  if(!S.db.resas.length)return null;
+  const lb=S.db.settings.lastBackup;
+  if(!lb)return'Aucune sauvegarde effectuée';
+  const j=Math.floor((+now-T(lb))/864e5);
+  return j>=BACKUP_DAYS?`Dernière sauvegarde il y a ${j} jours`:null;
+}
+function dashSalle(x,now){
+  const a=jourDe(now),b=a+864e5,n=+now;
+  const rs=S.db.resas.filter(r=>r.statut!=='annulee'&&r.salles.includes(x.id)&&T(r.debut)<b&&T(r.fin)>a).sort((p,q)=>T(p.debut)-T(q.debut));
+  const conf=rs.filter(r=>r.statut==='confirmee'),wait=rs.filter(r=>r.statut==='demande');
+  const cur=conf.find(r=>T(r.debut)<=n&&n<T(r.fin)),next=conf.find(r=>T(r.debut)>n);
+  const fin=r=>jourDe(r.fin)===jourDe(r.debut)||jourDe(r.fin)===a?heureDe(r.fin):fmtDT(r.fin);
+  if(cur)return{cls:'busy',txt:`Occupée jusqu’à ${fin(cur)}`,who:cur.demandeur.nom,r:cur};
+  if(next)return{cls:'busy',txt:`Réservée aujourd’hui à ${heureDe(next.debut)}`,who:next.demandeur.nom,r:next};
+  if(wait.length)return{cls:'wait',txt:`${wait.length} ${plur(wait.length,'demande','demandes')} en attente aujourd’hui`,who:'',r:null};
+  return{cls:'',txt:'Libre',who:'',r:null};
+}
+function dashView(){
+  const s=S.db.settings,now=nowD(),today=ymd(now),n=+now;
+  const salles=s.salles.map(x=>{const d=dashSalle(x,now);
+    return`<button class="dsal" ${d.r?`data-act="open" data-id="${d.r.id}"`:`data-act="day" data-d="${today}"`}><i class="bar ${d.cls}" aria-hidden="true">${esc(x.court)}</i><span class="grow"><b>${esc(x.nom)}</b> · ${esc(d.txt)}${d.who?`<br><span class="muted small">${esc(d.who)}</span>`:''}</span></button>`;}).join('');
+  const prochaines=S.db.resas.filter(r=>r.statut==='confirmee'&&T(r.fin)>n).sort((a,b)=>T(a.debut)-T(b.debut));
+  const attente=S.db.resas.filter(r=>r.statut==='demande'&&T(r.fin)>n).sort((a,b)=>T(a.debut)-T(b.debut));
+  const tk=taches(now),sv=sauvegardeAFaire(now),oldPw=s.pwPolicy<2,total=tk.reduce((t,c)=>t+c.items.length,0)+(sv?1:0)+(oldPw?1:0);
+  const line=(r,extra='')=>{const rd=relDate(r,now);return`<button class="tline" data-act="open" data-id="${r.id}"><span><b>${esc(r.demandeur.nom)}</b> · ${esc(r.type)}${extra}<br><span class="muted small">${esc(periode(r))} · ${esc(salleNames(r))} · ${esc(r.num)}</span></span><span class="rel${rd.urgent?' urgent':''}">${esc(rd.t)}</span></button>`;};
+  const MAX=8;
+  const jourCourt=x=>new Date(x).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+  const lineC=r=>{const rd=relDate(r,now);return`<button class="tline" data-act="open" data-id="${r.id}"><span><b>${esc(r.demandeur.nom)}</b> · ${esc(jourCourt(r.debut))} <span class="muted small">· ${esc(r.num)}</span></span><span class="rel${rd.urgent?' urgent':''}">${esc(rd.t)}</span></button>`;};
+  return`<h2>Tableau de bord</h2>
+  <div class="card"><h3>Aujourd’hui · ${esc(now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}</h3>${salles}</div>
+  <div class="card"><h3>Prochaines locations</h3>
+   ${prochaines.length?prochaines.slice(0,5).map(r=>line(r)).join('')+(prochaines.length>5?`<p class="muted small" style="margin:8px 0 0">et ${prochaines.length-5} autre(s) : voir « Réservations ».</p>`:''):'<p class="muted" style="margin:0">Aucune location à venir.</p>'}</div>
+  ${attente.length?`<div class="card"><h3>Demandes en attente (${attente.length})</h3>${attente.slice(0,MAX).map(r=>line(r,overlapping(r,'confirmee').length?' <span class="pill conflict">Créneau pris</span>':'')).join('')}${attente.length>MAX?`<p class="muted small" style="margin:8px 0 0">et ${attente.length-MAX} autre(s).</p>`:''}</div>`:''}
+  <div class="card"><h3>Dossiers à traiter${total?` (${total})`:''}</h3>
+   ${total?'':'<p class="ok-line" style="margin:0">✓ Rien à traiter pour le moment.</p>'}
+   ${tk.map(c=>`<p class="todo"><span aria-hidden="true">⚠</span> ${esc(c.label(c.items.length))}</p>${c.items.slice(0,MAX).map(lineC).join('')}${c.items.length>MAX?`<p class="muted small" style="margin:6px 0 0">et ${c.items.length-MAX} autre(s).</p>`:''}`).join('')}
+   ${sv?`<p class="todo"><span aria-hidden="true">⚠</span> ${esc(sv)}</p><div style="padding:6px 0"><button class="btn sm" data-act="backup">Sauvegarder maintenant</button></div>`:''}
+   ${oldPw?`<p class="todo"><span aria-hidden="true">⚠</span> Code d’accès à renforcer</p><p class="muted small" style="margin:0 0 6px">Votre code date de l’ancienne règle (8 caractères minimum). Remplacez-le par une phrase de ${PW_MIN} caractères ou plus.</p><div style="padding:0 0 6px"><button class="btn sm" data-act="tab" data-t="set">Changer le code (Réglages)</button></div>`:''}
+   ${tk.length?`<p class="muted small" style="margin:12px 0 0">Contrats, assurances et cautions : réservations des ${DASH_DAYS} prochains jours.</p>`:''}</div>
+  <div class="row"><button class="btn pri grow" data-act="new">Nouvelle réservation</button><button class="btn grow" data-act="tab" data-t="cal">Calendrier</button></div>`;
+}
+function calView(){
+  const s=S.db.settings,m=S.month,y=m.getFullYear(),mo=m.getMonth();
+  const off=(new Date(y,mo,1).getDay()+6)%7,days=new Date(y,mo+1,0).getDate(),today=ymd(new Date()),pre=`${y}-${pad(mo+1)}-`;
+  const focusDs=S.calFocus&&S.calFocus.startsWith(pre)?S.calFocus:today.startsWith(pre)?today:pre+'01';
+  let cells=['L','M','M','J','V','S','D'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<off;i++)cells+=`<div class="day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${pad(mo+1)}-${pad(d)}`,st=new Date(y,mo,d),sts=s.salles.map(x=>dayState(st,x.id));
+    const lab=v=>v==='busy'?'réservée':v==='wait'?'demande en attente':'libre';
+    cells+=`<button class="day${ds===today?' today':''}" data-act="day" data-d="${ds}" tabindex="${ds===focusDs?0:-1}" aria-label="${esc(st.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' : '+s.salles.map((x,i)=>x.nom+' '+lab(sts[i])).join(', '))}"><span class="n">${d}</span>${s.salles.map((x,i)=>`<i class="bar ${sts[i]}" aria-hidden="true">${esc(x.court)}</i>`).join('')}</button>`;
+  }
+  const noTarif=s.salles.every(x=>!x.jHab&&!x.jExt&&!x.wHab&&!x.wExt)&&!ensembleSet(s.ensemble);
+  return`<div class="monthbar"><button class="btn sm" data-act="prev" aria-label="Mois précédent">‹</button><h2>${esc(m.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}))}</h2><button class="btn sm" data-act="today">Aujourd’hui</button><button class="btn sm" data-act="next" aria-label="Mois suivant">›</button></div>
+  ${noTarif?`<div class="note small">Les tarifs ne sont pas encore renseignés. Ouvrez l’onglet Réglages pour les saisir.</div>`:''}
+  <div class="cal">${cells}</div>
+  <div class="legend"><span><i class="busy"></i>Réservée</span><span><i class="wait"></i>En attente</span><span><i class="free"></i>Libre</span></div>
+  <p class="muted small">${s.salles.map(x=>`${esc(x.court)} = ${esc(x.nom)}`).join(' · ')}. Touchez un jour pour voir les disponibilités.</p>
+  <button class="btn pri" style="width:100%;margin-top:6px" data-act="new">Nouvelle réservation</button>`;
+}
+function sheetView(){
+  const ds=S.sheet,st=new Date(ds+'T00:00'),a=+st,b=a+864e5,s=S.db.settings;
+  const rs=S.db.resas.filter(r=>r.statut!=='annulee'&&+new Date(r.debut)<b&&+new Date(r.fin)>a).sort((x,y)=>x.debut.localeCompare(y.debut));
+  const lines=s.salles.map(x=>{const stt=dayState(st,x.id);return`<div class="row" style="justify-content:space-between"><span>${esc(x.nom)}</span><b>${stt==='busy'?'Réservée':stt==='wait'?'Demande en attente':'Libre'}</b></div>`;}).join('');
+  return`<div class="overlay" data-act="closeSheet"><div class="sheet" role="dialog" aria-label="Jour sélectionné">
+   <h3>${esc(st.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}</h3>${lines}
+   ${rs.length?`<div style="margin-top:12px">${rs.map(r=>`<button class="item" data-act="open" data-id="${r.id}"><div class="r1"><b>${esc(r.num)}</b><span class="row" style="gap:6px;flex-wrap:nowrap">${clashFlag(r)}<span class="pill ${r.statut==='demande'?'wait':r.statut}">${STATUTS[r.statut]}</span></span></div><div>${esc(r.demandeur.nom)}</div><div class="muted small">${fmtDT(r.debut)} → ${fmtDT(r.fin)} · ${esc(salleNames(r))}</div></button>`).join('')}</div>`:''}
+   <div class="row" style="margin-top:12px"><button class="btn pri grow" data-act="new" data-d="${ds}">Réserver ce jour</button><button class="btn grow" data-act="closeSheet">Fermer</button></div></div></div>`;
+}
+function listView(){
+  const f=S.filt,years=[...new Set([...S.db.resas.map(r=>r.debut.slice(0,4)),String(new Date().getFullYear()),String(new Date().getFullYear()+1)])].sort();
+  const q=f.q.trim().toLowerCase();
+  const all=S.db.resas.filter(r=>(!f.year||r.debut.startsWith(f.year))&&(!f.statut||r.statut===f.statut)&&(!q||(r.num+' '+r.demandeur.nom+' '+r.type).toLowerCase().includes(q))).sort((a,b)=>a.debut.localeCompare(b.debut));
+  const conf=all.filter(r=>r.statut==='confirmee'),rec=conf.reduce((t,r)=>t+money(r).total,0),att=all.filter(r=>r.statut==='demande').length;
+  return`<h2>Réservations</h2>
+  <div class="card"><div class="stats"><div><b>${conf.length}</b><span class="muted small">locations réservées</span></div><div><b>${eur(rec)}</b><span class="muted small">recettes prévues</span></div><div><b>${att}</b><span class="muted small">en attente</span></div></div></div>
+  <div class="row" style="margin-bottom:10px"><div class="grow"><input type="search" id="q" placeholder="Nom, numéro, type…" value="${esc(f.q)}" aria-label="Rechercher"></div>
+   <select data-flt="year" aria-label="Année" style="width:auto"><option value="">Toutes les années</option>${years.map(y=>`<option ${f.year===y?'selected':''}>${y}</option>`).join('')}</select>
+   <select data-flt="statut" aria-label="Statut" style="width:auto"><option value="">Tous statuts</option>${Object.entries(STATUTS).map(([k,v])=>`<option value="${k}" ${f.statut===k?'selected':''}>${v}</option>`).join('')}</select></div>
+  ${all.length?all.map(r=>`<button class="item" data-act="open" data-id="${r.id}"><div class="r1"><b>${esc(r.num)}</b><span class="row" style="gap:6px;flex-wrap:nowrap">${clashFlag(r)}<span class="pill ${r.statut==='demande'?'wait':r.statut}">${STATUTS[r.statut]}</span></span></div>
+    <div>${esc(r.demandeur.nom)} <span class="muted">· ${esc(r.type)}</span></div><div class="muted small">${fmtDT(r.debut)} → ${fmtDT(r.fin)} · ${esc(salleNames(r))}</div>
+    <div class="prog" title="Avancement du dossier"><i style="width:${Math.round(progress(r)*100)}%"></i></div></button>`).join(''):`<p class="muted">Aucune réservation pour ces critères. Créez-en une depuis le calendrier.</p>`}
+  <div class="row" style="margin-top:8px"><button class="btn grow" data-act="pdfAuto">Importer des états des lieux</button><button class="btn pri grow" data-act="new">Nouvelle réservation</button></div>
+  <p class="muted small">Le document (PDF ou fichier HTML de l’appli d’état des lieux) est rattaché à la bonne fiche grâce au numéro de dossier dans son nom, par exemple SDF-2026-014_entree.pdf.</p>`;
+}
+function setView(){
+  const s=S.db.settings,n=eligible().length;
+  const num=(p,v)=>`<input type="number" inputmode="decimal" min="0" step="0.01" data-s="${p}" value="${v??0}">`;
+  return`<h2>Réglages</h2>
+  <div class="card"><h3>Commune</h3>
+   <label class="f">Nom de la commune</label><input type="text" data-s="commune" value="${esc(s.commune)}">
+   <label class="f">Signataire du contrat (vide = « Le Maire »)</label><input type="text" data-s="signataire" value="${esc(s.signataire)}">
+   <label class="f">Contact mairie pour les droits RGPD (facultatif)</label><input type="text" data-s="mairieContact" placeholder="mairie@…, téléphone" value="${esc(s.mairieContact)}"></div>
+  <div class="card"><h3>Salles et tarifs</h3><p class="muted small">Trois tarifs : chaque salle seule, et les deux ensemble. Montants en euros. Un week-end correspond à une location sur 2 jours calendaires ; chaque jour de plus est facturé au tarif journée.</p>
+   ${s.salles.map((x,i)=>`<h3 style="margin-top:14px;font-size:15px">${esc(x.nom)}</h3>
+    <label class="f">Nom</label><input type="text" data-s="salles.${i}.nom" value="${esc(x.nom)}">
+    <div class="grid2"><div><label class="f">Journée, habitant</label>${num(`salles.${i}.jHab`,x.jHab)}</div><div><label class="f">Journée, extérieur</label>${num(`salles.${i}.jExt`,x.jExt)}</div>
+    <div><label class="f">Week-end, habitant</label>${num(`salles.${i}.wHab`,x.wHab)}</div><div><label class="f">Week-end, extérieur</label>${num(`salles.${i}.wExt`,x.wExt)}</div></div>
+    <label class="f">Caution</label>${num(`salles.${i}.caution`,x.caution)}`).join('')}
+   <h3 style="margin-top:18px;font-size:15px">${esc(s.salles.map(x=>x.nom).join(' + '))} (les deux ensemble)</h3>
+   <p class="muted small">Tarif appliqué quand les deux salles sont réservées ensemble. S’il reste à 0, la somme des deux salles est utilisée.</p>
+   <div class="grid2"><div><label class="f">Journée, habitant</label>${num('ensemble.jHab',s.ensemble.jHab)}</div><div><label class="f">Journée, extérieur</label>${num('ensemble.jExt',s.ensemble.jExt)}</div>
+   <div><label class="f">Week-end, habitant</label>${num('ensemble.wHab',s.ensemble.wHab)}</div><div><label class="f">Week-end, extérieur</label>${num('ensemble.wExt',s.ensemble.wExt)}</div></div>
+   <label class="f">Caution</label>${num('ensemble.caution',s.ensemble.caution)}</div>
+  <div class="card"><h3>Options</h3>
+   ${s.options.map((o,i)=>`<div class="row" style="margin-bottom:8px"><div class="grow"><input type="text" data-s="options.${i}.nom" value="${esc(o.nom)}" aria-label="Nom de l’option"></div><div style="width:110px">${num(`options.${i}.prix`,o.prix)}</div><button class="btn sm bad" data-act="delOpt" data-i="${i}" aria-label="Supprimer l’option">✕</button></div>`).join('')}
+   <button class="btn sm" data-act="addOpt">Ajouter une option</button></div>
+  <div class="card"><h3>Application d’état des lieux</h3><label class="f">Adresse de l’application</label><input type="text" data-s="edlUrl" value="${esc(s.edlUrl)}">
+   <label class="f">Contact de l’agent : téléphone ou e-mail (facultatif)</label><input type="text" data-s="agentContact" placeholder="06 12 34 56 78 ou agent@…" value="${esc(s.agentContact)}"><p class="muted small">Sert à préremplir le destinataire du message. Sans contact, le menu de partage de l’appareil s’ouvre.</p></div>
+  <div class="card"><h3>Modèle de contrat</h3><p class="muted small">Champs disponibles : {{commune}} {{signataire}} {{num}} {{nom}} {{adresse}} {{tel}} {{email}} {{salles}} {{type}} {{debut}} {{fin}} {{loyer}} {{options}} {{optionsPrix}} {{total}} {{caution}} {{contact}}. Faites valider ce modèle par la mairie avant usage.</p>
+   <textarea data-s="contrat" style="min-height:260px">${esc(s.contrat)}</textarea><button class="btn sm" data-act="resetContrat" style="margin-top:8px">Rétablir le modèle initial</button></div>
+  <div class="card"><h3>Raccourcis clavier (ordinateur)</h3>
+   <p class="small"><b>Ctrl + S</b> enregistrer la fiche · <b>Échap</b> fermer la fenêtre ou la fiche (confirmation si elle est modifiée) · <b>/</b> rechercher une réservation<br><b>Calendrier :</b> flèches pour changer de jour, <b>Début</b> / <b>Fin</b> pour le mois, <b>Page ↑</b> / <b>Page ↓</b> pour changer de mois, <b>Entrée</b> pour ouvrir le jour.</p></div>
+  <div class="card"><h3>Numérotation des dossiers</h3>
+   <p class="small">${Object.keys(S.db.counters||{}).sort().map(y=>`${y} : jusqu’à SDF-${y}-${String(S.db.counters[y]).padStart(3,'0')}`).join(' · ')||'Aucun numéro attribué pour le moment.'}</p>
+   <p class="muted small">Un numéro n’est jamais réattribué, même si la fiche est supprimée ou anonymisée, et même après une restauration. Il peut y avoir des numéros manquants, jamais de doublon.</p></div>
+  <div class="card"><h3>Protection des données</h3>
+   <label class="f">Anonymiser les fiches terminées ou annulées depuis plus de (mois)</label><input type="number" min="1" data-s="retention" value="${s.retention}">
+   <p class="small ${n?'':'muted'}">${n?`${n} fiche${n>1?'s':''} à anonymiser : nom, adresse, téléphone, e-mail, notes et PDF seront effacés. Numéro, dates, salles et montants sont conservés.`:'Aucune fiche à anonymiser pour le moment.'}</p>
+   <button class="btn sm bad" data-act="anonym" ${n?'':'disabled'}>Anonymiser maintenant</button>
+   <p class="muted small">Durée à valider avec le délégué à la protection des données de la commune.</p></div>
+  <div class="card"><h3>Exports pour les élus (sans aucun nom)</h3><p class="muted small">Dates, salles, statut et numéro de dossier uniquement.</p>
+   <div class="row"><button class="btn sm" data-act="ics">Calendrier (.ics)</button><button class="btn sm" data-act="csv">Tableau (.csv)</button></div></div>
+  <div class="card"><h3>Sauvegarde et sécurité</h3><p class="muted small">La sauvegarde reste chiffrée : elle ne s’ouvre qu’avec le code d’accès ou le code de récupération. Avant toute restauration, la sauvegarde est vérifiée en entier et une copie de sécurité de vos données actuelles est téléchargée (sauvegarde-avant-restauration-…).</p>
+   <div class="row"><button class="btn sm" data-act="backup">Exporter une sauvegarde</button><button class="btn sm" data-act="restore">Restaurer une sauvegarde</button></div>
+   <label class="f" style="margin-top:14px" for="newpw">Changer le code d’accès (${PW_MIN} caractères minimum)</label><div class="row"><div class="grow"><input type="password" id="newpw" autocomplete="new-password" data-pwfield></div><button class="btn sm" data-act="chgpw">Changer</button></div>
+   <p class="small muted" id="pwHint" aria-live="polite" style="margin:4px 0 0">${esc(pwHint(''))}</p>
+   <label class="chk"><input type="checkbox" id="showpw"><span>Afficher le code</span></label>
+   <p class="small muted">${PW_TIP}</p>
+   <button class="btn sm" style="margin-top:14px" data-act="newrec">Nouveau code de récupération</button>
+   <p class="muted small">Génère un nouveau code et invalide l’ancien (les clés de chiffrement sont renouvelées). Utile si le code a été vu par quelqu’un d’autre ou perdu. Une sauvegarde déjà exportée reste ouvrable avec les codes qui étaient valables à sa création.</p>
+   <button class="btn sm" style="margin-top:14px" data-act="lock">Verrouiller maintenant</button></div>
+  <div class="card"><h3>Verrouillage automatique</h3>
+   <label class="f">Après ce nombre de minutes sans activité (1 minimum)</label>${num('lockIdleMin',s.lockIdleMin)}
+   <label class="f">Au retour après une absence de plus de (minutes, 0 = à chaque retour)</label>${num('lockAwayMin',s.lockAwayMin)}
+   <p class="muted small">L’absence, c’est l’appli en arrière-plan, un autre onglet ou une autre fenêtre : au retour, le code est redemandé tout de suite. Une fiche en cours de saisie est conservée (chiffrée) et rouverte après le code.</p></div>`;
+}
+function ficheView(){
+  const r=S.edit,s=S.db.settings,m=money(r),exists=S.db.resas.some(x=>x.id===r.id);
+  const inp=(f,label,type='text',extra='')=>`<label class="f">${label}</label><input type="${type}" data-f="${f}" value="${esc(f.split('.').reduce((o,k)=>o[k],r)??'')}" ${extra}>`;
+  return`<div class="sticky"><button class="btn sm" data-act="cancelEdit">Annuler</button><h1>${r.num?esc(r.num):'Nouvelle réservation'}</h1><button class="btn sm pri" data-act="save">Enregistrer</button></div>
+  <main>
+  ${slotBanners(r)}
+  <div class="card"><h3>Salle et dates</h3>
+   ${s.salles.map(x=>`<label class="chk"><input type="checkbox" data-arr="salles" data-val="${x.id}" data-r ${r.salles.includes(x.id)?'checked':''}><span>${esc(x.nom)}</span></label>`).join('')}
+   <div class="grid2 keep"><div><label class="f">Début</label><input type="datetime-local" data-f="debut" data-r value="${esc(r.debut)}"></div><div><label class="f">Fin</label><input type="datetime-local" data-f="fin" data-r value="${esc(r.fin)}"></div></div>
+   <div class="grid2"><div><label class="f">Type d’événement</label><select data-f="type">${TYPES.map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+   <div><label class="f">Nombre de personnes</label><input type="number" inputmode="numeric" min="0" data-f="nb" value="${r.nb??''}"></div></div></div>
+  <div class="card"><h3>Demandeur</h3>${inp('demandeur.nom','Nom et prénom','text','autocomplete="off"')}${inp('demandeur.adresse','Adresse')}
+   <div class="grid2 keep"><div>${inp('demandeur.tel','Téléphone','tel')}</div><div>${inp('demandeur.email','E-mail','email')}</div></div>
+   <label class="f">Tarif applicable</label><select data-f="hab" data-r><option value="hab" ${r.hab==='hab'?'selected':''}>Habitant de la commune</option><option value="ext" ${r.hab==='ext'?'selected':''}>Extérieur à la commune</option></select></div>
+  <div class="card"><h3>Options et montants</h3>
+   ${s.options.map(o=>`<label class="chk"><input type="checkbox" data-arr="options" data-val="${o.id}" data-r ${r.options.includes(o.id)?'checked':''}><span>${esc(o.nom)} <span class="muted">(${eur(o.prix)})</span></span></label>`).join('')}
+   <div class="grid2 keep"><div><label class="f">Loyer de la salle (€)</label><input type="number" inputmode="decimal" min="0" step="0.01" data-f="loyerManuel" data-live value="${r.loyerManuel??m.auto}"></div>
+   <div><label class="f">Caution (€)</label><input type="number" inputmode="decimal" min="0" step="0.01" data-f="cautionManuelle" data-live value="${r.cautionManuelle??m.cAuto}"></div></div>
+   <p class="muted small" id="tarifLabel" style="margin:8px 0 0">Tarif appliqué : ${esc(m.label)}.</p>
+   <div class="row" style="margin-top:6px"><button class="btn sm ghost" data-act="autoMoney">Recalculer selon les tarifs</button></div>
+   <div class="total"><span>Total à payer (loyer + options)</span><span id="tot">${eur(m.total)}</span></div></div>
+  <div class="card"><h3>Suivi du dossier</h3>
+   <label class="f">Statut</label><select data-f="statut" data-r>${Object.entries(STATUTS).map(([k,v])=>`<option value="${k}" ${r.statut===k?'selected':''}>${v}</option>`).join('')}</select>
+   ${ETAPES.map(([k,l])=>`<label class="chk"><input type="checkbox" data-f="etapes.${k}" data-r ${r.etapes[k]?'checked':''}><span>${l}</span></label>`).join('')}
+   <div class="prog"><i style="width:${Math.round(progress(r)*100)}%"></i></div></div>
+  <div class="card"><h3>États des lieux et documents</h3>
+   <div class="row"><button class="btn sm grow" data-act="edl" data-t="entree">Message à l’agent : entrée</button><button class="btn sm grow" data-act="edl" data-t="sortie">Message à l’agent : sortie</button></div>
+   <p class="muted small">Prépare un message avec le lien, la date et la salle, sans aucun nom. Importez ensuite le document reçu (PDF ou HTML) ici.</p>
+   ${r.pdfs.map(p=>`<div class="row" style="margin:6px 0"><span class="grow small"><b>${esc(docLabel(p))}</b><br><span class="muted">${esc(p.name)}</span></span><button class="btn sm" data-act="pdfOpen" data-id="${p.id}">Ouvrir</button><button class="btn sm bad" data-act="pdfDel" data-id="${p.id}" aria-label="Retirer">✕</button></div>`).join('')}
+   <button class="btn sm" data-act="pdfFiche">Importer un document</button>
+   <p class="muted small">Le contrat généré est ajouté ici et conservé (chiffré) avec le dossier. Pour joindre le scan du contrat signé, mettez « contrat » et « signe » dans le nom du fichier : l’étape « Contrat signé » se coche seule.</p></div>
+  <div class="card"><h3>Notes</h3><textarea data-f="notes" aria-label="Notes">${esc(r.notes)}</textarea></div>
+  <div class="row" style="margin-bottom:24px"><button class="btn grow" data-act="contrat">Générer le contrat (PDF)</button>${exists?`<button class="btn bad" data-act="del">Supprimer</button>`:''}</div>
+  </main>`;
+}
+function paint(){
+  const a=$('#app');
+  if(!S.key||S.lock){a.innerHTML=lockView();return;}
+  if(S.edit){const y=$('main')?.scrollTop||0;a.innerHTML=ficheView();$('main').scrollTop=y;return;}
+  const y=$('main')?.scrollTop||0;
+  a.innerHTML=`<header class="top"><h1>Salle des fêtes<small>${esc(S.db.settings.commune)}</small></h1><button class="btn sm" data-act="lock" aria-label="Verrouiller">Verrouiller</button></header>
+  ${lastWriteOk?'':`<div class="alert" role="alert" style="margin:0;border-radius:0;border-width:0 0 0 5px">Les dernières modifications n’ont pas pu être enregistrées sur cet appareil. Exportez une sauvegarde (Réglages) puis réessayez.</div>`}
+  <main>${S.tab==='dash'?dashView():S.tab==='cal'?calView():S.tab==='list'?listView():setView()}</main>
+  <nav class="tabs">${[['dash','Accueil'],['cal','Calendrier'],['list','Réservations'],['set','Réglages']].map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-t="${k}"${S.tab===k?' aria-current="page"':''}>${l}</button>`).join('')}</nav>${S.sheet?sheetView():''}`;
+  $('main').scrollTop=y;
+}
+
+
+/* Le rendu remplace tout le contenu : on rend le focus à l'élément qui l'avait, pour ne pas casser la navigation au clavier. */
+const finePointer=()=>{try{return matchMedia('(hover:hover) and (pointer:fine)').matches;}catch(e){return true;}};
+function focusSig(el){
+  const d=el.dataset,q=(k,v)=>`[data-${k}="${String(v).replace(/["\\]/g,'\\$&')}"]`;
+  if(el.id)return'#'+el.id;
+  if(d.f!==undefined)return q('f',d.f);
+  if(d.s!==undefined)return q('s',d.s);
+  if(d.flt!==undefined)return q('flt',d.flt);
+  if(d.arr!==undefined)return q('arr',d.arr)+q('val',d.val);
+  if(d.act){let s=q('act',d.act);for(const k of['t','d','id','i'])if(d[k]!==undefined)s+=q(k,d[k]);return s;}
+  return null;
+}
+function render(){
+  const a=$('#app'),prev=document.activeElement,sig=prev&&prev!==a&&a.contains(prev)?focusSig(prev):null;
+  const caret=prev&&/^(text|search|tel|email|password)$/.test(prev.type||'')?[prev.selectionStart,prev.selectionEnd]:null;
+  paint();guardUI();
+  let target=null,fresh=false;
+  if(S.autofocus){const af=S.autofocus;S.autofocus=null;if(af.force||finePointer()){try{target=a.querySelector(af.sel);}catch(e){}fresh=!!target;}}
+  if(!target&&sig){try{target=a.querySelector(sig);}catch(e){}}
+  if(!target&&(!S.key||S.lock)&&finePointer())target=a.querySelector('input:not([type=checkbox])');
+  if(target){target.focus(fresh?{}:{preventScroll:true});if(caret&&caret[0]!=null&&target===a.querySelector(sig||'x')){try{target.setSelectionRange(caret[0],caret[1]);}catch(e){}}}
+}
+
+/* ============ Actions ============ */
+function eligible(){
+  const lim=new Date();lim.setMonth(lim.getMonth()-(S.db.settings.retention||12));
+  return S.db.resas.filter(r=>!r.anonyme&&(r.statut==='annulee'||r.etapes.cautionRendue)&&new Date(r.fin)<lim);
+}
+const DOC_LABELS={contrat:'Contrat',contratsigne:'Contrat signé',entree:'État des lieux d’entrée',sortie:'État des lieux de sortie',autre:'Document'};
+const docLabel=p=>(DOC_LABELS[p.kind]||'Document')+(p.kind==='contrat'&&p.version>1?` (v${p.version})`:'');
+/* ============ Documents importés : contrôle avant de stocker ============
+   On ne se fie ni à l'attribut « accept » du sélecteur (une simple indication), ni à l'extension seule : le CONTENU du fichier doit être
+   un PDF (en-tête %PDF-, fin %%EOF) ou une page HTML (texte, balise html/head/body), et l'extension doit correspondre à ce contenu.
+   Taille maximale vérifiée avant même de lire le fichier. Espace disponible vérifié avant d'écrire.
+   Chaque fichier est jugé seul : un fichier refusé n'empêche pas les autres. */
+const MO=1024*1024,DOC_MAX={pdf:25*MO,html:10*MO};
+const DOC_MIME={pdf:['','application/pdf','application/x-pdf','application/octet-stream'],html:['','text/html','application/xhtml+xml','application/octet-stream']};
+class DocRefused extends Error{}
+const docExt=n=>{const m=/\.([A-Za-z0-9]{1,8})$/.exec(n||'');return m?m[1].toLowerCase():'';};
+const fmtMo=n=>(n/MO).toFixed(n<10*MO?1:0).replace('.',',')+' Mo';
+async function roomFor(bytes){
+  try{if(!navigator.storage||!navigator.storage.estimate)return true;const e=await navigator.storage.estimate();
+    if(!e||!e.quota)return true;return (e.usage||0)+bytes*1.2<=e.quota*0.9;}   // 20 % de marge pour le chiffrement et la base
+  catch(err){return true;}
+}
+async function inspectDoc(file){
+  const name=file&&file.name||'(sans nom)',q=`« ${name} »`;
+  const ext=docExt(name),kind=ext==='pdf'?'pdf':(ext==='htm'||ext==='html')?'html':null;
+  if(!kind)throw new DocRefused(`${q} : format non accepté (PDF ou document HTML uniquement).`);
+  if(!file.size)throw new DocRefused(`${q} : le fichier est vide.`);
+  if(file.size>DOC_MAX[kind])throw new DocRefused(`${q} : ${fmtMo(file.size)}, c’est trop volumineux (maximum ${fmtMo(DOC_MAX[kind])} pour ${kind==='pdf'?'un PDF':'un document HTML'}).`);
+  if(!DOC_MIME[kind].includes((file.type||'').toLowerCase().split(';')[0].trim()))throw new DocRefused(`${q} : le type déclaré (${file.type}) ne correspond pas à ${kind==='pdf'?'un PDF':'un document HTML'}.`);
+  const buf=await file.arrayBuffer();
+  if(buf.byteLength>DOC_MAX[kind])throw new DocRefused(`${q} : fichier trop volumineux.`);                    // la taille lue fait foi
+  const u=new Uint8Array(buf),latin=(a,b)=>{let t='';for(let i=a;i<Math.min(b,u.length);i++)t+=String.fromCharCode(u[i]);return t;};
+  const head=latin(0,1024),isPdf=head.includes('%PDF-');
+  if(kind==='pdf'){
+    if(!isPdf){throw new DocRefused(/<\s*(!doctype|html|head|body)/i.test(latin(0,2048))?`${q} : c’est en réalité un document HTML, pas un PDF. Renommez-le en .html.`:`${q} : le contenu n’est pas celui d’un PDF.`);}
+    if(!latin(Math.max(0,u.length-2048),u.length).includes('%%EOF'))throw new DocRefused(`${q} : le PDF semble incomplet ou abîmé (il n’a pas de fin). Exportez-le ou téléchargez-le de nouveau.`);
+  }else{
+    if(isPdf&&head.trimStart().startsWith('%PDF-'))throw new DocRefused(`${q} : c’est en réalité un PDF, pas un document HTML. Renommez-le en .pdf.`);
+    const top=u.subarray(0,8192);
+    if(top.includes(0))throw new DocRefused(`${q} : le contenu est binaire, ce n’est pas une page HTML.`);
+    if(!/<!doctype\s+html|<html[\s>]|<head[\s>]|<body[\s>]/i.test(latin(0,8192)))throw new DocRefused(`${q} : le contenu n’est pas celui d’une page HTML.`);
+  }
+  if(!(await roomFor(buf.byteLength)))throw new DocRefused(`${q} : plus assez de place sur cet appareil. Exportez une sauvegarde et supprimez d’anciens documents.`);
+  return buf;
+}
+async function attachPdf(file,r){
+  const buf=await inspectDoc(file);                        // lève DocRefused si le fichier est refusé : rien n'est stocké
+  const id=uid();
+  try{await kvSet('f:'+id,await seal(S.key,buf));}
+  catch(e){if(e&&e.name==='QuotaExceededError')throw new DocRefused(`« ${file.name} » : le stockage de l’appareil est plein.`);throw e;}
+  const low=file.name.toLowerCase(),kind=/contrat/.test(low)?(/sign[eé]/.test(low)?'contratsigne':'contrat'):/sortie/.test(low)?'sortie':/entr[ée]e/.test(low)?'entree':'autre';
+  r.pdfs.push({id,name:file.name,kind,date:new Date().toISOString()});
+  if(kind==='entree')r.etapes.edlEntree=true;if(kind==='sortie')r.etapes.edlSortie=true;if(kind==='contratsigne')r.etapes.contrat=true;return id;
+}
+async function openPdf(id,name){
+  const buf=await unseal(S.key,await kvGet('f:'+id));
+  if(/\.html?$/i.test(name)){
+    // Document HTML : affiché dans un cadre isolé, sans script, séparé des données de l'appli.
+    const v=document.createElement('div');v.className='viewer';
+    v.innerHTML=`<div class="sticky"><button class="btn sm" data-viewer="close">Fermer</button><h1>${esc(name)}</h1><button class="btn sm" data-viewer="save">Enregistrer</button></div><iframe title="${esc(name)}" sandbox></iframe>`;
+    v.querySelector('iframe').srcdoc=dec.decode(buf);
+    v.addEventListener('click',e=>{const a=e.target.dataset.viewer;if(a==='close')v.remove();if(a==='save')download(name,buf,'text/html');});
+    document.body.appendChild(v);return;
+  }
+  const url=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));
+  const w=window.open(url,'_blank');if(w)openWins.push(w);else download(name,buf,'application/pdf');setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function saveResa(opts={}){
+  const r=S.edit;
+  if(!r.demandeur.nom.trim())return toast('Indiquez le nom du demandeur.');
+  if(!r.salles.length)return toast('Choisissez au moins une salle.');
+  if(!(new Date(r.fin)>new Date(r.debut)))return toast('La fin doit être après le début.');
+  const taken=overlapping(r,'confirmee'),prev=S.db.resas.find(x=>x.id===r.id);
+  const unchanged=prev&&prev.statut==='confirmee'&&prev.debut===r.debut&&prev.fin===r.fin&&sameSet(prev.salles,r.salles); // ancien conflit déjà présent : on ne bloque pas les modifications sans rapport
+  if(r.statut==='confirmee'&&taken.length&&!unchanged){
+    alert(`Enregistrement refusé : ce créneau est déjà réservé.\n\n${taken.map(descr).join('\n')}\n\nChangez les dates ou la salle, ou laissez cette réservation « En attente ».`);
+    return;
+  }
+  if(r.statut==='demande'&&taken.length&&!confirm(`Ce créneau est déjà réservé par ${taken.map(x=>x.num).join(', ')}.\n\nEnregistrer quand même comme demande en attente (liste d’attente) ?`))return;
+  const rivals=r.statut==='confirmee'?overlapping(r,'demande'):[];
+  if(!r.num)r.num=nextNum(new Date(r.debut).getFullYear());
+  const i=S.db.resas.findIndex(x=>x.id===r.id);if(i>=0)S.db.resas[i]=r;else S.db.resas.push(r);
+  if(!(await flushSave()))return toast('⚠ Enregistrement impossible sur cet appareil. Réessayez ou exportez une sauvegarde.');
+  for(const id of S.delFiles)await kvDel('f:'+id);
+  if(opts.stay){S.edit=clone(r);S.editBase=JSON.stringify(S.edit);S.newFiles=[];S.delFiles=[];render();return true;}
+  S.edit=null;S.newFiles=[];S.delFiles=[];S.editBase='';render();
+  toast(rivals.length?`Réservation enregistrée. ${rivals.length} demande(s) en attente sur ce créneau sont à refuser (statut « Annulée »).`:'Réservation enregistrée.');
+  return true;
+}
+const editDirty=()=>!!S.edit&&JSON.stringify(S.edit)!==S.editBase;
+function closeSheet(){const ds=S.sheet;S.sheet=null;S.autofocus=ds?{sel:`.day[data-d="${ds}"]`,force:true}:null;render();}
+async function closeFiche(){
+  if(!S.edit)return;
+  if(editDirty()&&!confirm('Abandonner les modifications de cette fiche ?\n\nElles ne seront pas enregistrées.'))return;
+  const id=S.edit.id,existed=S.db.resas.some(x=>x.id===id);
+  for(const f of S.newFiles)await kvDel('f:'+f);
+  S.edit=null;S.newFiles=[];S.delFiles=[];S.editBase='';
+  S.autofocus={sel:existed?`[data-act="open"][data-id="${id}"]`:'[data-act="new"]',force:true};
+  render();
+}
+async function persistEdit(){const i=S.db.resas.findIndex(x=>x.id===S.edit.id);if(i<0)return false;S.db.resas[i]=clone(S.edit);return flushSave();}
+function edlMessage(r,t){
+  const s=S.db.settings,base=s.edlUrl.replace(/#.*$/,'');
+  const p=new URLSearchParams({dossier:r.num,type:t,date:(t==='entree'?r.debut:r.fin).slice(0,10),salles:salleNames(r)});
+  const url=base+'#'+p.toString(),entree=t==='entree';
+  const text=`Bonjour,
+Pouvez-vous faire l’état des lieux ${entree?'d’entrée':'de sortie'} de la salle des fêtes de ${s.commune} ?
+
+Dossier : ${r.num}
+Salle(s) : ${salleNames(r)}
+${entree?'Début':'Fin'} de la location : ${fmtLong(entree?r.debut:r.fin)}
+
+Ouvrez ce lien dans l’application d’état des lieux :
+${url}
+
+Ensuite, envoyez le document (bouton Partager) à la mairie par la messagerie de la mairie, pas par WhatsApp.
+Merci.`;
+  return{subject:`État des lieux ${entree?'d’entrée':'de sortie'} – ${r.num}`,text,url};
+}
+function contratMap(r){
+  const s=S.db.settings,m=money(r);
+  return{commune:s.commune,signataire:s.signataire||'le Maire',num:r.num,nom:r.demandeur.nom,adresse:r.demandeur.adresse||'—',tel:r.demandeur.tel||'—',email:r.demandeur.email||'—',
+    salles:salleNames(r),type:r.type.toLowerCase(),debut:fmtLong(r.debut),fin:fmtLong(r.fin),loyer:eur(m.base),
+    options:r.options.map(id=>s.options.find(o=>o.id===id)?.nom).filter(Boolean).join(', ')||'aucune',optionsPrix:eur(m.opt),total:eur(m.total),caution:eur(m.caution),
+    contact:s.mairieContact?` (${s.mairieContact})`:''};
+}
+const contratTexte=r=>{const map=contratMap(r);return S.db.settings.contrat.replace(/\{\{(\w+)\}\}/g,(x,k)=>k in map?map[k]:x);};
+
+/* ============ Génération de PDF (sans bibliothèque, polices Times standard) ============ */
+const PDFW={R:[250,333,408,500,500,833,778,180,333,333,500,564,250,333,250,278,500,500,500,500,500,500,500,500,500,500,278,278,564,564,564,444,921,722,667,667,722,611,556,722,722,333,389,722,611,889,722,722,556,722,667,556,611,722,722,944,722,722,611,333,278,333,469,500,333,444,500,444,500,444,333,500,500,278,278,500,278,778,500,500,500,500,333,389,278,500,500,722,500,500,444,480,200,480,541,761,500,0,333,500,444,1000,500,500,333,1000,556,333,889,0,611,0,0,333,333,444,444,350,500,1000,333,980,389,333,722,0,444,722,250,333,500,500,500,500,200,500,333,760,276,500,564,333,760,333,400,564,300,300,333,500,453,250,333,300,310,500,750,750,750,444,722,722,722,722,722,722,889,667,611,611,611,611,333,333,333,333,722,722,722,722,722,722,722,564,722,722,722,722,722,722,556,500,444,444,444,444,444,444,667,444,444,444,444,444,278,278,278,278,500,500,500,500,500,500,500,564,500,500,500,500,500,500,500,500],B:[250,333,555,500,500,1000,833,278,333,333,500,570,250,333,250,278,500,500,500,500,500,500,500,500,500,500,333,333,570,570,570,500,930,722,667,722,722,667,611,778,778,389,500,778,667,944,722,778,611,778,722,556,667,722,722,1000,722,722,667,333,278,333,581,500,333,500,556,444,556,444,333,500,556,278,333,556,278,833,556,500,556,556,444,389,333,556,500,722,500,500,444,394,220,394,520,761,500,0,333,500,500,1000,500,500,333,1000,556,333,1000,0,667,0,0,333,333,500,500,350,500,1000,333,1000,389,333,722,0,444,722,250,333,500,500,500,500,220,500,333,747,300,500,570,333,747,333,400,570,300,300,333,556,540,250,333,300,330,500,750,750,750,500,722,722,722,722,722,722,1000,722,667,667,667,667,389,389,389,389,722,722,778,778,778,778,778,570,778,722,722,722,722,722,611,556,500,500,500,500,500,500,722,444,444,444,444,444,278,278,278,278,500,556,500,500,500,500,500,570,500,556,556,556,556,500,556,500],I:[250,333,420,500,500,833,778,214,333,333,500,675,250,333,250,278,500,500,500,500,500,500,500,500,500,500,333,333,675,675,675,500,920,611,611,667,722,611,611,722,722,333,444,667,556,833,667,722,611,722,611,500,556,722,611,833,611,556,556,389,278,389,422,500,333,500,500,444,500,444,278,500,500,278,278,444,278,722,500,500,500,500,389,389,278,500,444,667,444,444,389,400,275,400,541,761,500,0,333,500,556,889,500,500,333,1000,500,333,944,0,556,0,0,333,333,556,556,350,500,889,333,980,389,333,667,0,389,556,250,389,500,500,500,500,275,500,333,760,276,500,675,333,760,333,400,675,300,300,333,500,523,250,333,300,310,500,750,750,750,500,611,611,611,611,611,611,889,667,611,611,611,611,333,333,333,333,722,667,722,722,722,722,722,675,722,722,722,722,722,556,611,500,500,500,500,500,500,500,667,444,444,444,444,444,278,278,278,278,500,500,500,500,500,500,500,675,500,500,500,500,500,444,500,444]}; // largeurs des caractères (1/1000 em), codes 32 à 255
+const CP1252_HI='€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ';
+function toWin(s){
+  s=String(s).replace(/[\u2000-\u200A\u202F\u205F]/g,'\u00a0').replace(/[\u2010\u2011]/g,'-').replace(/[\t\n\r]/g,' ');
+  let o='';
+  for(const ch of s){const c=ch.codePointAt(0);
+    if((c>=32&&c<=126)||(c>=160&&c<=255))o+=String.fromCharCode(c);
+    else{const i=CP1252_HI.indexOf(ch);o+=(i>=0&&![1,13,15,16,29].includes(i))?String.fromCharCode(128+i):'?';}}
+  return o;
+}
+const tw=(s,f,size)=>{let w=0;const t=PDFW[f];for(let i=0;i<s.length;i++){const k=s.charCodeAt(i);w+=(k>=32?t[k-32]:0)||0;}return w*size/1000;};
+const pdfEsc=s=>s.replace(/[\\()]/g,'\\$&');
+const pdfUtf16=s=>'<FEFF'+[...String(s)].map(c=>c.charCodeAt(0).toString(16).padStart(4,'0')).join('')+'>';
+function pdfDoc(){
+  const W=595.28,H=841.89,M=56.7,BOT=M+16,maxW=W-2*M,pages=[[]];let y=H-M;
+  const cur=()=>pages[pages.length-1];
+  const newPage=()=>{pages.push([]);y=H-M;};
+  const need=h=>{if(y-h<BOT)newPage();};
+  function wrap(text,f,size,width){
+    const out=[];let line='';
+    for(let wd of text.split(' ')){
+      while(tw(wd,f,size)>width){ // mot plus long qu'une ligne : coupé
+        let k=wd.length;while(k>1&&tw(wd.slice(0,k),f,size)>width)k--;
+        if(line){out.push(line);line='';}out.push(wd.slice(0,k));wd=wd.slice(k);}
+      const t=line?line+' '+wd:wd;
+      if(!line||tw(t,f,size)<=width)line=t;else{out.push(line);line=wd;}
+    }
+    out.push(line);return out;
+  }
+  return{
+    para(text,o={}){
+      const{f='R',size=11,align='left',before=0,after=0,indent=0,keep=0}=o,lead=size*1.4;
+      const lines=wrap(toWin(text),f,size,maxW-indent);
+      y-=before;need(lead*Math.min(lines.length,2)+keep);
+      for(const ln of lines){if(y-lead<BOT)newPage();y-=lead;const w=tw(ln,f,size);cur().push({t:ln,f,size,x:align==='center'?(W-w)/2:M+indent,y:y+lead*0.28});}
+      y-=after;
+    },
+    gap(n){y-=n;},
+    keep(n){need(n);},
+    rule(x1,x2){cur().push({raw:`0.6 w ${x1.toFixed(1)} ${(y).toFixed(1)} m ${x2.toFixed(1)} ${(y).toFixed(1)} l S`});},
+    cols(){return{left:M,mid:W/2,right:W-M};},
+    setY(v){y=v;},getY(){return y;},
+    build(meta){
+      const n=pages.length,objs=[];
+      const stream=(i)=>{
+        let s='';
+        for(const it of pages[i]){
+          if(it.raw)s+=it.raw+'\n';
+          else s+=`BT /${it.f==='B'?'F2':it.f==='I'?'F3':'F1'} ${it.size} Tf 1 0 0 1 ${it.x.toFixed(2)} ${it.y.toFixed(2)} Tm (${pdfEsc(it.t)}) Tj ET\n`;
+        }
+        const ft=toWin(`${meta.footer} – page ${i+1}/${n}`),fw=tw(ft,'R',8);
+        s+=`BT /F1 8 Tf 1 0 0 1 ${((W-fw)/2).toFixed(2)} 32 Tm (${pdfEsc(ft)}) Tj ET\n`;
+        return s;
+      };
+      objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+      objs[2]=`<< /Type /Pages /Kids [${pages.map((_,i)=>`${7+2*i} 0 R`).join(' ')}] /Count ${n} >>`;
+      objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>';
+      objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>';
+      objs[5]='<< /Type /Font /Subtype /Type1 /BaseFont /Times-Italic /Encoding /WinAnsiEncoding >>';
+      const d=new Date(),z=x=>String(x).padStart(2,'0');
+      objs[6]=`<< /Title ${pdfUtf16(meta.title)} /Author ${pdfUtf16(meta.author)} /Creator ${pdfUtf16('Réservations de la salle des fêtes')} /CreationDate (D:${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}) >>`;
+      pages.forEach((_,i)=>{
+        const c=stream(i);
+        objs[7+2*i]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents ${8+2*i} 0 R >>`;
+        objs[8+2*i]=`<< /Length ${c.length} >>\nstream\n${c}endstream`;
+      });
+      let out='%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n';const off=[];
+      for(let i=1;i<objs.length;i++){off[i]=out.length;out+=`${i} 0 obj\n${objs[i]}\nendobj\n`;}
+      const xr=out.length;
+      out+=`xref\n0 ${objs.length}\n0000000000 65535 f \n`+off.slice(1).map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+`trailer\n<< /Size ${objs.length} /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xr}\n%%EOF\n`;
+      const u=new Uint8Array(out.length);for(let i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;return u;
+    }
+  };
+}
+function contratPdf(r){
+  const s=S.db.settings,d=pdfDoc();
+  d.para('Contrat de location de la salle des fêtes',{f:'B',size:17,align:'center',after:2});
+  d.para(`Commune de ${s.commune} · Dossier ${r.num}`,{align:'center',after:14});
+  for(const line of contratTexte(r).split('\n')){
+    if(!line.trim())d.gap(6);
+    else if(/^Article\s+\d+/.test(line))d.para(line,{f:'B',size:11.5,before:6,keep:40});
+    else d.para(line);
+  }
+  const date=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  d.gap(10);d.keep(150);
+  d.para(`Fait à ${s.commune}, le ${date}, en deux exemplaires.`,{after:10});
+  const c=d.cols(),y0=d.getY();
+  d.para('Le locataire',{f:'B',size:11});d.para('(lu et approuvé)',{f:'I',size:10});
+  d.setY(y0);d.para('Pour la commune',{f:'B',size:11,indent:(c.mid-c.left)});d.para(s.signataire||'Le Maire',{f:'I',size:10,indent:(c.mid-c.left)});
+  d.gap(70);d.rule(c.left,c.mid-20);d.rule(c.mid,c.right);
+  return d.build({title:`Contrat de location – ${r.num}`,author:s.commune,footer:`Contrat de location de la salle des fêtes – dossier ${r.num}`});
+}
+function icsAnon(){
+  const f=d=>{const x=new Date(d);return `${x.getFullYear()}${pad(x.getMonth()+1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`;};
+  const ev=S.db.resas.filter(r=>r.statut!=='annulee').map(r=>`BEGIN:VEVENT\r\nUID:${r.id}@salle-des-fetes\r\nDTSTAMP:${f(new Date())}\r\nDTSTART:${f(r.debut)}\r\nDTEND:${f(r.fin)}\r\nSUMMARY:${salleNames(r)} - ${r.statut==='confirmee'?'Réservée':'En attente'} (${r.num})\r\nEND:VEVENT`);
+  return`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Salle des fetes//FR\r\n${ev.join('\r\n')}\r\nEND:VCALENDAR`;
+}
+async function backup(prefix='sauvegarde-salle-des-fetes'){
+  const out={app:'sdf-reservations',v:1,kv:{}};
+  for(const [k,v] of await kvEntries()){if(k==='draft')continue;out.kv[k]=k==='meta'?v:toB64(v);}
+  download(`${prefix}-${ymd(new Date())}.json`,JSON.stringify(out),'application/json');
+}
+
+/* ============ Restauration sécurisée ============ */
+/* Étape 1 : vérifier la structure du fichier, sans rien modifier. */
+function parseBackup(o){
+  const bad=err=>({ok:false,err});
+  if(!o||o.app!=='sdf-reservations'||o.v!==1||typeof o.kv!=='object'||!o.kv)return bad('format non reconnu');
+  const m=o.kv.meta;
+  if(!m||typeof m!=='object'||['sP','wP','sR','wR'].some(k=>typeof m[k]!=='string'||!m[k]))return bad('clés de chiffrement absentes');
+  const bufs={};
+  try{
+    for(const [k,v] of Object.entries(o.kv)){
+      if(k==='meta')continue;
+      if(k!=='data'&&!/^f:[a-z0-9]+$/.test(k))return bad('élément inattendu');
+      if(typeof v!=='string')return bad('élément illisible');
+      bufs[k]=fromB64(v);
+      if(bufs[k].byteLength<28)return bad('élément trop court ou tronqué');
+    }
+    if([fromB64(m.sP),fromB64(m.sR)].some(s=>s.byteLength!==16)||[fromB64(m.wP),fromB64(m.wR)].some(w=>w.byteLength!==60))return bad('clés de chiffrement invalides');
+  }catch(e){return bad('données mal encodées');}
+  if(!bufs.data)return bad('base de données absente');
+  return{ok:true,meta:{sP:m.sP,wP:m.wP,sR:m.sR,wR:m.wR},bufs};
+}
+async function unwrapBackupKey(meta,code){
+  try{return await unseal(await derive(code,new Uint8Array(fromB64(meta.sP))),fromB64(meta.wP));}catch(e){}
+  try{return await unseal(await derive(normRec(code),new Uint8Array(fromB64(meta.sR))),fromB64(meta.wR));}catch(e){}
+  return null;
+}
+/* Étape 2 : avec le code de la sauvegarde, tout déchiffrer et contrôler (base, structure, chaque document). */
+async function verifyBackup(parsed,code){
+  const bad=err=>({ok:false,err});
+  const raw=await unwrapBackupKey(parsed.meta,code);
+  if(!raw)return bad('code incorrect');
+  const key=await importKey(raw);
+  let db;
+  try{db=JSON.parse(dec.decode(await unseal(key,parsed.bufs.data)));}catch(e){return bad('base de données illisible ou altérée');}
+  if(!db||!Array.isArray(db.resas)||!db.settings||!Array.isArray(db.settings.salles))return bad('structure des réservations invalide');
+  if(db.resas.some(r=>!r||typeof r.id!=='string'||typeof r.debut!=='string'||typeof r.fin!=='string'||!Array.isArray(r.salles)||!r.demandeur||typeof r.demandeur!=='object'))return bad('une réservation est invalide');
+  for(const [k,b] of Object.entries(parsed.bufs)){if(k==='data')continue;try{await unseal(key,b);}catch(e){return bad('un document est altéré');}}
+  const missing=[];db.resas.forEach(r=>(r.pdfs||[]).forEach(p=>{if(!parsed.bufs['f:'+p.id])missing.push(p.name);}));
+  return{ok:true,raw,db,missing,nFiles:Object.keys(parsed.bufs).length-1};
+}
+function askSecret(message,title='Vérification de la sauvegarde'){return new Promise(res=>{
+  const v=document.createElement('div');v.className='overlay';v.style.alignItems='center';v.style.padding='16px';
+  v.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" style="border-radius:14px;max-width:440px"><h3>${esc(title)}</h3><p class="small">${esc(message)}</p><input type="password" id="secretIn" autocomplete="off" aria-label="Code"><div class="row" style="margin-top:12px"><button class="btn grow" data-x="no">Annuler</button><button class="btn pri grow" data-x="ok">Vérifier</button></div></div>`;
+  const done=x=>{v.remove();res(x);};
+  v.addEventListener('click',e=>{const a=e.target.dataset.x;if(a==='ok')done(v.querySelector('#secretIn').value);if(a==='no')done(null);});
+  v.querySelector('#secretIn').addEventListener('keydown',e=>{if(e.key==='Enter')done(e.target.value);});
+  document.body.appendChild(v);v.querySelector('#secretIn').focus();
+});}
+async function restoreFromFile(f){
+  let o;
+  try{o=JSON.parse(await f.text());}catch(e){return toast('Ce fichier n’est pas une sauvegarde valide. Rien n’a été modifié.');}
+  const parsed=parseBackup(o);
+  if(!parsed.ok)return toast(`Sauvegarde non exploitable (${parsed.err}). Rien n’a été modifié.`);
+  const code=await askSecret('Saisissez le code d’accès (ou le code de récupération) de cette sauvegarde. Elle sera vérifiée en entier avant de remplacer quoi que ce soit.');
+  if(!code)return;
+  toast('Vérification en cours…');
+  const chk=await verifyBackup(parsed,code);
+  if(!chk.ok)return toast(`Restauration annulée : ${chk.err}. Vos données actuelles n’ont pas été modifiées.`);
+  const warn=chk.missing.length?`\n\nATTENTION : ${chk.missing.length} document(s) cités dans les fiches sont absents de cette sauvegarde.`:'';
+  if(!confirm(`Sauvegarde vérifiée : ${chk.db.resas.length} réservation(s), ${chk.nFiles} document(s).${warn}\n\nElle va REMPLACER vos ${S.db.resas.length} réservation(s) actuelle(s). Une copie de sécurité de vos données actuelles va d’abord être téléchargée.\n\nContinuer ?`))return;
+  S.restoring=true;
+  try{
+    await drainWrites();
+    await backup('sauvegarde-avant-restauration');       // copie de sécurité de l'état actuel
+    const entries=[['meta',parsed.meta],...Object.entries(parsed.bufs)];
+    const prevCounters={...(S.db.counters||{})};
+    await kvReplaceAll(entries);                          // tout ou rien
+    S.meta=parsed.meta;S.edit=null;S.sheet=null;
+    S.restoring=false;
+    await loadWith(chk.raw);
+    for(const [y,n] of Object.entries(prevCounters))S.db.counters[y]=Math.max(S.db.counters[y]||0,n); // aucun numéro déjà attribué ne sera réutilisé
+    await flushSave();
+    S.lock=null;S.tab='list';arm();render();
+    toast(`Sauvegarde restaurée : ${chk.db.resas.length} réservation(s). Une copie de l’état précédent a été téléchargée.`);
+  }catch(err){
+    console.error(err);S.restoring=false;
+    toast('Restauration impossible : vos données actuelles sont conservées.');
+  }finally{S.restoring=false;}
+}
+
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,id=el.dataset.id;
+  try{
+  switch(a){
+    case 'setup':{const p1=$('#pw1').value,p2=$('#pw2').value;const pb=pwProblem(p1);if(pb)return toast(pb);if(normPw(p1)!==normPw(p2))return toast('Les deux codes sont différents.');
+      el.disabled=true;S.rec=await setupCode(p1);S.lock='showrec';render();break;}
+    case 'recDone':if(!$('#recok').checked)return toast('Cochez la case après avoir noté le code.');S.rec=null;S.recWhy=null;S.lock=null;arm();render();break;
+    case 'printRec':$('#print').innerHTML=`<h1>Code de récupération</h1><p style="text-align:center;font-size:20pt;font-family:monospace;margin:30pt 0">${esc(S.rec)}</p><p>Réservations de la salle des fêtes. À conserver en lieu sûr, séparément de l’appareil.</p>`;window.print();break;
+    case 'unlock':{
+      if(guardWait()>0){guardUI();return toast(`Trop d’essais. Réessayez dans ${guardWait()} s.`);}
+      el.disabled=true;const ok=await tryUnlock($('#pw').value);el.disabled=false;
+      if(!ok){guardUI();return toast(wrongMsg('Code incorrect.'));}
+      S.lock=null;arm();render();break;}
+    case 'goRecover':S.lock='recover';render();break;
+    case 'goUnlock':S.lock='unlock';render();break;
+    case 'recover':{
+      if(guardWait()>0){guardUI();return toast(`Trop d’essais. Réessayez dans ${guardWait()} s.`);}
+      const n=$('#pwn').value;const pb=pwProblem(n);if(pb)return toast(pb);
+      el.disabled=true;toast('Renouvellement des clés en cours…');
+      const r=await tryRecover($('#rec').value,n);el.disabled=false;
+      if(r.err==='code'||r.err==='wait'){guardUI();return toast(r.err==='wait'?`Trop d’essais. Réessayez dans ${guardWait()} s.`:wrongMsg('Code de récupération incorrect.'));}
+      if(r.err)return toast('Récupération impossible : rien n’a été modifié.');
+      S.db.settings.pwPolicy=2;flushSave();
+      S.rec=r.rec;S.recWhy='recovered';S.lock='showrec';arm();render();break;}
+    case 'lock':await lockManual();break;
+    case 'tab':flushSave();S.tab=el.dataset.t;if(S.tab==='list')S.autofocus={sel:'#q'};render();break;
+    case 'prev':S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render();break;
+    case 'next':S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render();break;
+    case 'today':{const d=new Date();S.month=new Date(d.getFullYear(),d.getMonth(),1);render();break;}
+    case 'day':S.calFocus=el.dataset.d;S.sheet=el.dataset.d;S.autofocus={sel:'.sheet button',force:true};render();break;
+    case 'closeSheet':if(el.classList.contains('overlay')&&e.target!==el)break;closeSheet();break;
+    case 'new':S.edit=newResa(el.dataset.d);S.editBase=JSON.stringify(S.edit);S.sheet=null;S.newFiles=[];S.delFiles=[];S.autofocus={sel:'input[data-f="demandeur.nom"]'};render();break;
+    case 'open':S.edit=clone(S.db.resas.find(r=>r.id===id));S.editBase=JSON.stringify(S.edit);S.sheet=null;S.newFiles=[];S.delFiles=[];render();break;
+    case 'cancelEdit':await closeFiche();break;
+    case 'save':await saveResa();break;
+    case 'del':if(confirm('Supprimer définitivement cette réservation et ses documents ?\n\nSon numéro ne sera jamais réattribué.')){const r=S.db.resas.find(x=>x.id===S.edit.id);for(const p of r.pdfs)await kvDel('f:'+p.id);for(const f of S.newFiles)await kvDel('f:'+f);S.db.resas=S.db.resas.filter(x=>x.id!==r.id);await flushSave();S.edit=null;render();toast('Réservation supprimée.');}break;
+    case 'autoMoney':S.edit.loyerManuel=null;S.edit.cautionManuelle=null;render();break;
+    case 'contrat':{
+      if(!S.edit.demandeur.nom.trim())return toast('Indiquez le nom du demandeur.');
+      el.disabled=true;
+      try{
+        if(!(await saveResa({stay:true})))return;               // le contrat correspond à une fiche valide et enregistrée
+        const r=S.edit,ver=r.pdfs.filter(p=>p.kind==='contrat').length+1;
+        const name=`${r.num}_contrat${ver>1?'_v'+ver:''}.pdf`,doc=contratPdf(r),id=uid();
+        await kvSet('f:'+id,await seal(S.key,doc.buffer));
+        r.pdfs.push({id,name,kind:'contrat',version:ver,date:new Date().toISOString()});
+        if(!(await persistEdit())){await kvDel('f:'+id);r.pdfs.pop();return toast('⚠ Enregistrement impossible sur cet appareil. Contrat non conservé.');}
+        S.editBase=JSON.stringify(S.edit);render();toast(`Contrat généré et ajouté aux documents du dossier (${name}).`);
+        await openPdf(id,name);
+      }finally{el.disabled=false;}
+      break;}
+        case 'edl':{if(!S.edit.num)return toast('Enregistrez d’abord la fiche pour obtenir le numéro de dossier.');
+      const msg=edlMessage(S.edit,el.dataset.t),c=S.db.settings.agentContact.trim(),q=encodeURIComponent;
+      if(c){location.href=c.includes('@')?`mailto:${c}?subject=${q(msg.subject)}&body=${q(msg.text)}`:`sms:${c.replace(/\s/g,'')}?&body=${q(msg.text)}`;}
+      else if(navigator.share){try{await navigator.share({title:msg.subject,text:msg.text});}catch(x){if(x.name!=='AbortError')throw x;}}
+      else{try{await navigator.clipboard.writeText(msg.text);toast('Message copié. Collez-le dans un e-mail ou un SMS.');}catch(x){prompt('Copiez ce message :',msg.text);}}
+      break;}
+    case 'pdfFiche':S.pdfTarget='fiche';$('#pdfIn').click();break;
+    case 'pdfAuto':S.pdfTarget='auto';$('#pdfIn').click();break;
+    case 'pdfOpen':{const p=S.edit.pdfs.find(x=>x.id===id);await openPdf(id,p.name);break;}
+    case 'pdfDel':if(confirm('Retirer ce document de la fiche ?')){S.edit.pdfs=S.edit.pdfs.filter(x=>x.id!==id);S.delFiles.push(id);render();}break;
+    case 'addOpt':S.db.settings.options.push({id:uid(),nom:'Nouvelle option',prix:0});await flushSave();render();break;
+    case 'delOpt':{const o=S.db.settings.options[+el.dataset.i];if(confirm(`Supprimer l’option « ${o.nom} » ?`)){S.db.settings.options.splice(+el.dataset.i,1);await flushSave();render();}break;}
+    case 'resetContrat':if(confirm('Remplacer le modèle actuel par le modèle initial ?')){S.db.settings.contrat=DEFAULT_CONTRAT;await flushSave();render();}break;
+    case 'anonym':{const l=eligible();if(l.length&&confirm(`Anonymiser ${l.length} fiche(s) ? Cette action est définitive.`)){
+      for(const r of l){for(const p of r.pdfs)await kvDel('f:'+p.id);r.pdfs=[];r.demandeur={nom:'(anonymisé)',adresse:'',tel:'',email:''};r.notes='';r.anonyme=true;}
+      await flushSave();render();toast('Fiches anonymisées.');}break;}
+    case 'ics':download('calendrier-salle-des-fetes.ics',icsAnon(),'text/calendar');break;
+    case 'csv':{const rows=[['Numéro','Salles','Début','Fin','Statut'],...S.db.resas.filter(r=>r.statut!=='annulee').map(r=>[r.num,salleNames(r),r.debut.replace('T',' '),r.fin.replace('T',' '),STATUTS[r.statut]])];
+      download('reservations-salle-des-fetes.csv','\ufeff'+rows.map(x=>x.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n'),'text/csv');break;}
+    case 'backup':await flushSave();await backup();S.db.settings.lastBackup=nowD().toISOString();await flushSave();render();toast('Sauvegarde exportée.');break;
+    case 'restore':$('#restoreIn').click();break;
+    case 'newrec':{
+      if(guardWait()>0)return toast(`Trop d’essais. Réessayez dans ${guardWait()} s.`);
+      const pw=await askSecret('Saisissez votre code d’accès pour confirmer. Un nouveau code de récupération sera généré et l’ancien cessera de fonctionner : les clés de chiffrement sont renouvelées.','Nouveau code de récupération');
+      if(!pw)return;
+      if(!(await checkPassword(pw)))return toast(wrongMsg('Code d’accès incorrect. Rien n’a été modifié.'));
+      toast('Renouvellement des clés en cours…');
+      try{S.rec=await rekey(S.key,pw);S.recWhy='rotated';S.lock='showrec';render();}
+      catch(err){console.error(err);toast('Renouvellement impossible : rien n’a été modifié.');}
+      break;}
+    case 'chgpw':{const n=$('#newpw').value;const pb=pwProblem(n);if(pb)return toast(pb);S.meta=await wrapMeta(S.raw,n,null,S.meta);$('#newpw').value='';S.db.settings.pwPolicy=2;await flushSave();render();toast('Code d’accès modifié.');break;}
+  }
+  }catch(err){console.error(err);toast('Une erreur est survenue. Réessayez.');}
+});
+
+/* Saisie : les champs texte mettent à jour l'état sans redessiner (pas de perte de focus) */
+function readVal(t){return t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?null:Number(t.value)):t.value;}
+function onField(e){
+  const t=e.target;
+  if(t.id==='showpw'&&e.type==='change'){document.querySelectorAll('input[data-pwfield]').forEach(i=>{i.type=t.checked?'text':'password';});return;}
+  if(t.dataset.pwfield!==undefined){const hint=$('#pwHint');if(hint&&e.type==='input'){hint.textContent=pwHint(t.value);}return;}
+  if(t.dataset.arr&&S.edit){if(e.type!=='change')return;const arr=S.edit[t.dataset.arr],v=t.dataset.val,i=arr.indexOf(v);
+    if(t.checked&&i<0)arr.push(v);if(!t.checked&&i>=0)arr.splice(i,1);render();return;}
+  if(t.dataset.f&&S.edit){
+    const redraw='r' in t.dataset;            // data-r : redessiner la fiche (montants, bandeaux, avancement)
+    if(redraw&&e.type!=='change')return;
+    setPath(S.edit,t.dataset.f,readVal(t));
+    if(redraw)render();
+    else if(t.dataset.live){const m=money(S.edit);$('#tot').textContent=eur(m.total);}
+    return;}
+  if(t.dataset.s&&S.db){let v=readVal(t);if(t.type==='number')v=v??0;setPath(S.db.settings,t.dataset.s,v);if(e.type==='change')flushSave();else markDirty();return;}
+  if(t.id==='q'){S.filt.q=t.value;const pos=t.selectionStart;render();const q=$('#q');q.focus();q.setSelectionRange(pos,pos);return;}
+  if(t.dataset.flt&&e.type==='change'){S.filt[t.dataset.flt]=t.value;render();}
+}
+document.addEventListener('input',onField);
+document.addEventListener('change',onField);
+/* ============ Clavier (ordinateur) ============ */
+const isTyping=t=>!!t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+function trapTab(e){
+  const box=e.target.closest&&e.target.closest('.sheet');if(!box)return;
+  const f=[...box.querySelectorAll('button,input,select,textarea,a[href]')].filter(x=>!x.disabled&&x.offsetParent!==null);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+}
+function moveDay(target,e){
+  const steps={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7},k=e.key;
+  const cur=new Date(target.dataset.d+'T00:00');let d=new Date(cur);
+  if(k in steps)d.setDate(d.getDate()+steps[k]);
+  else if(k==='PageUp')d.setMonth(d.getMonth()-1);
+  else if(k==='PageDown')d.setMonth(d.getMonth()+1);
+  else if(k==='Home')d=new Date(cur.getFullYear(),cur.getMonth(),1);
+  else if(k==='End')d=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+  else return;
+  e.preventDefault();
+  const ds=ymd(d);S.calFocus=ds;S.month=new Date(d.getFullYear(),d.getMonth(),1);S.autofocus={sel:`.day[data-d="${ds}"]`,force:true};render();
+}
+document.addEventListener('keydown',async e=>{
+  if(e.key==='Enter'&&['pw','pw1','pw2','rec','pwn'].includes(e.target.id)){$('.lock .btn.pri')?.click();return;}
+  if(e.key==='Tab'){trapTab(e);return;}
+  if(e.key==='Escape'){
+    const ov=document.querySelector('body>.overlay [data-x=no]');if(ov){e.preventDefault();ov.click();return;}   // saisie du code de sauvegarde
+    const vw=document.querySelector('body>.viewer');if(vw){e.preventDefault();vw.remove();return;}                // lecteur de document
+    if(!S.key||S.lock){if(S.lock==='recover'){S.lock='unlock';render();}return;}
+    if(S.sheet){e.preventDefault();closeSheet();return;}
+    if(S.edit){e.preventDefault();await closeFiche();return;}
+    if(e.target&&e.target.id==='q'){e.preventDefault();if(e.target.value){S.filt.q='';render();$('#q')?.focus();}else e.target.blur();}
+    return;
+  }
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='s'){
+    if(!S.key||S.lock)return;
+    e.preventDefault();
+    if(S.edit){if(await saveResa({stay:true}))toast('Fiche enregistrée.');}
+    else toast((await flushSave())?'Tout est enregistré.':'⚠ Enregistrement impossible. Exportez une sauvegarde.');
+    return;
+  }
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&S.key&&!S.lock&&!S.edit&&!S.sheet&&!isTyping(e.target)&&!document.querySelector('body>.overlay,body>.viewer')){
+    e.preventDefault();flushSave();S.tab='list';S.autofocus={sel:'#q',force:true};render();return;
+  }
+  if(e.target&&e.target.classList&&e.target.classList.contains('day')&&e.target.dataset.d)moveDay(e.target,e);
+});
+window.addEventListener('beforeunload',e=>{if(S.key&&editDirty()){e.preventDefault();e.returnValue='';}});
+
+$('#pdfIn').addEventListener('change',async e=>{
+  const files=[...e.target.files];e.target.value='';if(!files.length||!S.key)return;
+  const refused=[];
+  const add=async(f,r)=>{try{return await attachPdf(f,r);}catch(err){if(!(err instanceof DocRefused))console.error(err);refused.push(err instanceof DocRefused?err.message:`« ${f.name} » : import impossible.`);return null;}};
+  const report=()=>{if(refused.length)alert(`Document(s) refusé(s) :\n\n${refused.map(x=>'• '+x).join('\n')}\n\nSont acceptés : les PDF (${fmtMo(DOC_MAX.pdf)} maximum) et les pages HTML exportées (${fmtMo(DOC_MAX.html)} maximum).`);};
+  try{
+    if(S.pdfTarget==='fiche'&&S.edit){
+      let n=0;for(const f of files){const id=await add(f,S.edit);if(id){S.newFiles.push(id);n++;}}
+      render();if(n)toast(n>1?`${n} documents ajoutés. Pensez à enregistrer.`:'Document ajouté. Pensez à enregistrer.');report();return;
+    }
+    let ok=0,ko=[];
+    for(const f of files){const m=f.name.match(/SDF-\d{4}-\d{3,}/i);const r=m&&S.db.resas.find(x=>x.num.toUpperCase()===m[0].toUpperCase());
+      if(r){if(await add(f,r))ok++;}else ko.push(f.name);}
+    await flushSave();render();
+    if(ok||ko.length||!refused.length)toast(ko.length?`${ok} rattaché(s). Numéro de dossier introuvable dans : ${ko.join(', ')}`:`${ok} document(s) rattaché(s) aux fiches.`);
+    report();
+  }catch(err){console.error(err);toast('Import impossible.');}
+});
+$('#restoreIn').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f||!S.key)return;
+  try{await restoreFromFile(f);}catch(err){console.error(err);S.restoring=false;toast('Restauration impossible : vos données actuelles sont conservées.');}
+});
+
+/* ============ Verrouillage automatique ============
+   Basé sur l'heure réelle, pas seulement sur un minuteur : un minuteur est gelé quand l'appli passe en arrière-plan
+   (téléphone verrouillé, veille de l'ordinateur). On compare donc des horodatages à chaque signe de vie, à chaque retour
+   au premier plan et à intervalle régulier.
+   - Inactivité : plus de 10 minutes sans action (réglable) → verrouillage.
+   - Absence : appli en arrière-plan, autre fenêtre ou autre onglet plus de 2 minutes (réglable) → verrouillage IMMÉDIAT au retour,
+     avant que quoi que ce soit ne s'affiche. */
+const AWAY_GRACE=3000; // les micro-pertes de focus (boîtes de dialogue, sélecteur de fichier) ne comptent pas comme une absence
+let lastActivity=Date.now(),awayAt=null,lastMove=0;
+function lockLimits(){
+  const s=S.db?S.db.settings:{},i=Number(s.lockIdleMin),a=Number(s.lockAwayMin);
+  return{idle:(i>0?i:10)*60000,away:Math.max((Number.isFinite(a)&&a>=0?a:2)*60000,AWAY_GRACE)};
+}
+function arm(){lastActivity=Date.now();awayAt=null;}                       // appelé au déverrouillage
+function activity(e){
+  const n=Date.now();
+  if(e.type==='pointermove'||e.type==='mousemove'||e.type==='wheel'||e.type==='scroll'){if(n-lastMove<1000)return;lastMove=n;}
+  lastActivity=n;
+}
+function checkIdle(){if(S.key&&!S.lock&&Date.now()-lastActivity>=lockLimits().idle)lockNow();}
+function goAway(){if(awayAt===null&&S.key&&!S.lock)awayAt=Date.now();}
+function comeBack(){
+  if(!S.key||S.lock){awayAt=null;return;}
+  const now=Date.now(),{idle,away}=lockLimits();
+  if(awayAt!==null&&now-awayAt>=away){lockNow();return;}                  // absent assez longtemps : verrouillé tout de suite
+  awayAt=null;
+  if(now-lastActivity>=idle){lockNow();return;}                            // ou inactif depuis trop longtemps
+  if(S.tab==='dash'&&!S.edit&&!S.sheet)render();                           // l'accueil est remis à l'heure au retour
+}
+['pointerdown','pointermove','mousemove','keydown','touchstart','wheel'].forEach(ev=>document.addEventListener(ev,activity,{passive:true,capture:true}));
+document.addEventListener('scroll',activity,{passive:true,capture:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();goAway();}else comeBack();});
+window.addEventListener('pagehide',()=>{flushSave();goAway();});
+window.addEventListener('pageshow',comeBack);                              // retour depuis le cache de navigation (bfcache)
+window.addEventListener('blur',goAway);                                    // changement de fenêtre
+window.addEventListener('focus',comeBack);
+document.addEventListener('freeze',goAway);                                // gel de la page par le navigateur
+document.addEventListener('resume',comeBack);
+setInterval(checkIdle,5000);
+setInterval(()=>{if(S.key&&!S.lock&&S.tab==='dash'&&!S.edit&&!S.sheet&&!document.hidden&&!document.querySelector('body>.overlay,body>.viewer'))render();},60000);   // l'accueil suit l'heure qui passe
+
+/* Installation et mode hors connexion : uniquement quand la page est servie en ligne (https), pas depuis un fichier local */
+if(location.protocol==='https:'||location.hostname==='localhost'){
+  [['manifest','manifest.webmanifest'],['apple-touch-icon','apple-touch-icon.png']].forEach(([rel,href])=>{const l=document.createElement('link');l.rel=rel;l.href=href;document.head.appendChild(l);});
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+
+/* Démarrage */
+(async()=>{
+  if(!window.crypto?.subtle||!window.indexedDB){$('#app').innerHTML='<div class="lock"><h1>Navigateur non compatible</h1><p>Ouvrez cette application avec un navigateur récent, depuis une adresse https.</p></div>';return;}
+  S.meta=await kvGet('meta');S.lock=S.meta?'unlock':'setup';render();
+})();
+</script>
+</body>
+</html>
